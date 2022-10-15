@@ -41,16 +41,16 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
         # self.led = self.board.get_pin('d:13:o')
 
         ### Stefan version
-        self.SerialObj1 = serial.Serial('/dev/ttyACM0', 115200, timeout=0.5) #port used by the arduino mega board
+        self.SerialObj1 = serial.Serial('/dev/ttyACM1', 115200, timeout=0.5) #port used by the arduino mega board
         # print("ééééé ARDUINO CONNEXION OK éééééééééé")
  
 
     def onAnimateBeginEvent(self, dt): 
         if self.nb_module == 1 :
-            pres_tab = [copy(self.pressure[0].pressure.value),copy(self.pressure[1].pressure.value),copy(self.pressure[2].pressure.value)]
+            pres_tab = [(self.pressure[0].pressure.value),(self.pressure[1].pressure.value),(self.pressure[2].pressure.value)]
             S = "{:,.3f}".format(pres_tab[0]) + "," + "{:,.3f}".format(pres_tab[1]) + "," + "{:,.3f}".format(pres_tab[2]) + ',' + "{:,.3f}".format(0) + "," + "{:,.3f}".format(0) + "," + "{:,.3f}".format(0) +"\n"
         elif self.nb_module == 2 :
-            pres_tab = [copy(self.pressure[0].pressure.value),copy(self.pressure[1].pressure.value),copy(self.pressure[2].pressure.value),copy(self.pressure[3].pressure.value),copy(self.pressure[4].pressure.value),copy(self.pressure[5].pressure.value)]
+            pres_tab = [self.pressure[0].pressure.value,self.pressure[1].pressure.value,self.pressure[2].pressure.value,self.pressure[3].pressure.value,self.pressure[4].pressure.value,self.pressure[5].pressure.value]
             S = "{:,.3f}".format(pres_tab[0]) + "," + "{:,.3f}".format(pres_tab[1]) + "," + "{:,.3f}".format(pres_tab[2]) + ',' + "{:,.3f}".format(pres_tab[3]) + "," + "{:,.3f}".format(pres_tab[4]) + "," + "{:,.3f}".format(pres_tab[5]) +"\n"
 
         print(S)
@@ -62,7 +62,7 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
 
 class AuroraTracking(Sofa.Core.Controller):
         """Doc string"""
-        def __init__(self, child_name, name, offset=[0,0,0], *args, **kwargs):
+        def __init__(self, child_name, name, module, offset=[0,0,0], *args, **kwargs):
             Sofa.Core.Controller.__init__(self,args,kwargs)
             self.RootNode = kwargs["RootNode"]        # aurora setting 
             self.settings_aurora = { "tracker type": "aurora", "ports to use" : [10]}
@@ -71,13 +71,19 @@ class AuroraTracking(Sofa.Core.Controller):
 
             self.stiffNode = self.RootNode.getChild(child_name) # for the generic one
             self.position = self.stiffNode.getObject(name)
+            nb_module = module.nb_module
+            h_module = module.h_module
 
+            self.z_eff_pos = nb_module * h_module 
             # first frames are invalid so we drop a given number of them
             for frame_to_drop in range(10):
                 self.tracker.get_frame()
             
-            pos_raw = get_data()
-            self.displacement = [-pos_raw[0]+offset[0], pos_raw[1]+offset[1], -pos_raw[2]+offset[2]]
+            self.aurora_frame = self.tracker.get_frame();
+            x_i = self.aurora_frame[3][0][0][3]
+            y_i = self.aurora_frame[3][0][1][3]
+            z_i = self.aurora_frame[3][0][2][3]
+            self.displacement = [ -x_i, -y_i , - z_i ]
 
         def get_data():
             self.aurora_frame = self.tracker.get_frame();
@@ -89,6 +95,15 @@ class AuroraTracking(Sofa.Core.Controller):
             return [x_i, y_i, z_i]
 
         def onAnimateBeginEvent(self,e):
-            pos_raw = get_data()
-            pos = [pos_raw[0] + self.displacement[0], pos_raw[1] + self.displacement[1],  pos_raw[2] + self.displacement[2]]
+            self.aurora_frame = self.tracker.get_frame();
+
+            x = self.aurora_frame[3][0][0][3]
+            y = self.aurora_frame[3][0][1][3]
+            z = self.aurora_frame[3][0][2][3]
+            
+            pos_raw = [x ,y ,z]
+            print('raw position is')
+            print(pos_raw)
+            if ~math.isnan(pos_raw[0]):
+                pos = [pos_raw[0] + self.displacement[0], pos_raw[1] + self.displacement[1],  self.z_eff_pos + (pos_raw[2] + self.displacement[2])]
             self.position.position = [pos]

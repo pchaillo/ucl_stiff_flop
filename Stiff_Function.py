@@ -1,7 +1,7 @@
 import Sofa.Core
 
 # utilise Rigidify de STLIB
-from stlib3.physics.mixedmaterial import Rigidify
+#from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
 
 # permet d'initialiser un robot au nb de module voulu :

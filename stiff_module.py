@@ -10,6 +10,8 @@ from flopMultiController import *
 from SimuController_ucl import *
 from TrajectoryController import *
 from CloseLoopController import *
+#from UCL_hardware_controller import *
+from UCL_Controller import *
 # from polhemus_liberty.python.Polhemus_SOFA_Controller import *
 
 # try : ## pour le fonctionnement classique # ATTENTION AUX ERREURS 
@@ -26,33 +28,33 @@ from CloseLoopController import *
 #     from ucl_collaboration.flopMultiController import *
 #     from ucl_collaboration.SimuController_ucl import *
 
-from stlib3.physics.mixedmaterial import Rigidify
-from stlib3.physics.deformable import ElasticMaterialObject
+#from stlib3.physics.mixedmaterial import Rigidify
+#from stlib3.physics.deformable import ElasticMaterialObject
 #from tutorial import *
 import time
 
 ############## PARAM7TRES A FIXER ####################
 
-act_flag = 1 # set 0 for IP and 1 for direct control
+act_flag = 0 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm
-record = 0 # 0 => no record // 1 => record
-setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+record = 1 # 0 => no record // 1 => record
+setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 
 close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
-    shift = 5 # shift in mm between the goal and the goal2 (for grabbing) points
+    shift = 0#5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0 #0.1
+    K_P = 0.001 #0.1
     # K_I = 0.0001
-    K_I = 0.11
+    K_I = 0.0005
 
 dt = 0.001
 
 # Paramètres controller
 pas = 20 # pour argument controller (attention aux unités !)
-max_pression = 150 # en kPa
+max_pression = 120 # en kPa
 min_pression = 0
 init_pressure_value = 0
 # value_type = "1" # pour commande en volume (avec beam6)
@@ -88,13 +90,11 @@ if version == 1 : # V1
     # chamber_model =  'model_chambres_55_simp.stl'
     # module_model = 'model_module_55.vtk'
     # YM_soft = 30 # young modulus of the soft part (kPa)
-
- 
     radius = 7
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 50 # hauteur du module en mm
+    h_module = 53 # hauteur du module en mm
     # chamber_model =  'model_chambres_v2_reg.stl'
     chamber_model =  'model_chambre_regulier_cutted.stl'
     # module_model = 'coeur_module01.vtk'
@@ -102,7 +102,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk'
     radius = 5.75 
-    YM_soft = 15 # young modulus of the soft part (kPa)
+    YM_soft = 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -136,13 +136,12 @@ position = [0,0,h_effector]
 
 ## Trajectory parameters :
 circle_radius = 25
-nb_iter_circle = 600 # 600 eq to 1min/tour approximately
+nb_iter_circle = 1800# 600 eq to 1min/tour approximately
 circle_height = h_effector
 
-nb_iter_square = 150 # 600 eq 10min/tour /// 
+nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
-square_radius = 20
-
+square_radius = 10
 point_tab = [ [10,10,60],[10,5,60],[10,0,60],[10,-5,60],[10,-10,60],[5,-10,60],[5,-5,60],[5,0,60]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 ############## PARAM7TRES -- FIN ####################
@@ -153,9 +152,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression)
     
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/BeamAdapter/lib')#/libBeamAdapter.so 1.0
+    #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
+    #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
+    #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/BeamAdapter/lib')#/libBeamAdapter.so 1.0
 
     # required plugins:
     rootNode.addObject('RequiredPlugin', name='SoftRobots.Inverse')
@@ -202,8 +201,8 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     stiff_flop = stiff.createRobot(parent = rigidFramesNode, name = "MyStiffFlop",out_flag = out_flag, act_flag = act_flag)
 
-    # MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
-    # DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
+    MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
+    DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
 
     if act_flag == 0 :
         rootNode.addObject('QPInverseProblemSolver', name="QP", printLog='0', saveMatrices = True ,epsilon = 0.01) # initialement epsilon = 0.001
@@ -219,7 +218,7 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
          ## 2eme goal poitn pour décalage, permet de mieux attraper à la souris
         if close_loop == 0 :
-            goal2 = EffectorGoal(node=rootNode, position = [0,0,h_effector+shift+3],name = 'goal2',taille = 0.5)
+            goal2 = EffectorGoal(node=rootNode, position = [0,0,h_effector+shift],name = 'goal2',taille = 0.5)
 
 
         ## CLASSIC 
@@ -288,28 +287,37 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
             if close_loop == 1 :
                 # test = 2
                 # rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,child_name = 'DesiredPosition',name = 'DesiredPositionM0', RootNode = rootNode)) # for goal without shift
-                # rootNode.addObject(CloseLoopController(name="CloseLoopController",RootNode=rootNode, K_P = K_P, K_I = K_I))
+                #rootNode.addObject(CloseLoopController(name="CloseLoopController",RootNode=rootNode, K_P = K_P, K_I = K_I))
+                
                 rootNode.addObject(CloseLoopController2(name="CloseLoopController",RootNode=rootNode, K_P = K_P, K_I = K_I))
 
-                # rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height,module=stiff))
-                rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 0.2,shift=0,beam_flag = 0))
-                # rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
-                # rootNode.addObject(SquareTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_circle,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+
+                #rootNode.addObject(LineTrajectory(nb_iter=20,node = DesiredPosition,name = 'DesiredPositionM0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
+                #rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height -5, module=stiff))
+
+                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+                # rootNode.addObject(SquareTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_square,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+                
+                # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
                 # rootNode.addObject(PatternTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_circle,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
- 
-            else : # open loop ( close_loop == 0 )
+            else : # open loop ( close_loop == 0 )               
+                #rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
+
+                #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))
+
+                #rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=0,beam_flag = 1))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
+
+                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
+
+                # rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
+
                 rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
-                # rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,shift]))
-
-                # rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [-10 , 10 , 58+shift], p_end = [10, -10 , 58 +shift]))
-                rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 0.7,shift=0,beam_flag = 1))
-                # rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+5,module=stiff))
-                # rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_circle,node = goal2,name = 'goal2M0',square_height = square_height+5,module=stiff))
-
-
+                rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,5]))
         elif act_flag == 1 :
             rootNode.addObject(StiffController(pas=pas,module = stiff,RootNode = rootNode))
-
+            #rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))
 
     return rootNode
 
