@@ -10,7 +10,6 @@ from flopMultiController import *
 from SimuController_ucl import *
 from TrajectoryController import *
 from CloseLoopController import *
-#from UCL_hardware_controller import *
 from UCL_Controller import *
 # from polhemus_liberty.python.Polhemus_SOFA_Controller import *
 
@@ -94,7 +93,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 53 # hauteur du module en mm
+    h_module = 55 # hauteur du module en mm
     # chamber_model =  'model_chambres_v2_reg.stl'
     chamber_model =  'model_chambre_regulier_cutted.stl'
     # module_model = 'coeur_module01.vtk'
