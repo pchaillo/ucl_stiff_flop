@@ -55,9 +55,19 @@ class CloseLoopController(Sofa.Core.Controller):
             error = inputPos - trackingPos
             print(error)
 
-
             self.integrate_error = self.integrate_error + error
-            self.outputPos = self.outputPos + error*self.K_P + self.integrate_error*self.K_I
+            for index in range (3): 
+                if self.integrate_error[index] > 200:
+                     self.integrate_error[index] = 200
+                if self.integrate_error[index] < -200:
+                     self.integrate_error[index] = -200          
+            print('the integrate_error is')
+            print(self.integrate_error)
+            
+
+            self.outputPos[0] = self.outputPos[0] + 2*error[0]*self.K_P + 1.5*self.integrate_error[0]*self.K_I
+            self.outputPos[1] = self.outputPos[1] + 2*error[1]*self.K_P + 1.5*self.integrate_error[1]*self.K_I
+            self.outputPos[2] = self.outputPos[2] + error[2]*self.K_P + self.integrate_error[2]*self.K_I
             print(self.outputPos)
 
             # outputPos = [outputPos[0],outputPos[1],outputPos[2]]
@@ -88,7 +98,7 @@ class CloseLoopController2(Sofa.Core.Controller):
 
         self.first_flag = 0 # just to avoid the 1st time step
         self.outputPos = array(self.outputMO1.position[0])
-        print("AAAAAAAA")
+        print("controller 2")
         print(self.outputPos)
 
         self.integrate_error = 0
@@ -106,26 +116,32 @@ class CloseLoopController2(Sofa.Core.Controller):
             inputPos = array(self.inputMO1.position[0])
             trackingPos = array(self.trackingMO1.position[0])
             # outputPos = array(self.outputMO1.position[0])
-
-            print("TTTTTTTTTT")
+            if (~math.isnan(trackingPos[0])):
+                print("Tracking posistion is")
             # print(outputPos)
-            print(trackingPos)
-            print(inputPos)
+                print(trackingPos)
+            #print(inputPos)
 
-            error = inputPos - trackingPos
-            print(error)
+                error = -(trackingPos - inputPos)
+                print('the error is')
+                print(error)
 
+                self.integrate_error = self.integrate_error + error
+                for index in range (3): 
+                    if self.integrate_error[index] > 200:
+                        self.integrate_error[index] = 200
+                    if self.integrate_error[index] < -200:
+                        self.integrate_error[index] = -200          
+                print('the integrated error is')
+                print(self.integrate_error)
 
-            self.integrate_error = self.integrate_error + error
-            self.outputPos = inputPos + error*self.K_P + self.integrate_error*self.K_I
-            print(self.outputPos)
-
-            # outputPos = [outputPos[0],outputPos[1],outputPos[2]]
-
-            # print([outputPos])
-
-            self.outputMO1.position = [self.outputPos]
-
+                self.outputPos[0] = inputPos[0] + 2*error[0]*self.K_P + 1.5*self.integrate_error[0]*self.K_I
+                self.outputPos[1] = inputPos[1] + 2*error[1]*self.K_P + 1.5*self.integrate_error[1]*self.K_I
+                self.outputPos[2] = inputPos[2] + 1*error[2]*self.K_P + 1*self.integrate_error[2]*self.K_I
+                print('corrected position is')
+                print(self.outputPos)
+            
+                self.outputMO1.position = [self.outputPos]
 
 ## CODE INITIAL (ALESSANDRINI) ##
 
