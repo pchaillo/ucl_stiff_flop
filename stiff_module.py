@@ -40,7 +40,7 @@ record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
 
-close_loop = 1 # 0 => no close loop
+close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
@@ -50,11 +50,11 @@ else :
     # K_I = 0.0001
     K_I = 0.0005
 
-dt = 0.001
+dt = 0.1
 
 # Paramètres controller 
-pas = 20 # pour argument controller (attention aux unités !)
-max_pression = 120 # en kPa
+pas = 20*dt # pour argument controller (attention aux unités !) (*dt pour dyn)
+max_pression = 120*dt # en kPa
 min_pression = 0
 init_pressure_value = 0
 # value_type = "1" # pour commande en volume (avec beam6)
@@ -67,7 +67,7 @@ nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # en kg, soit 10g
 # soft part
-coef_poisson = 0.4 # coefficient de poisson
+coef_poisson = 0 # 0.4 # coefficient de poisson
 # stiff parts
 rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts  
 YM_stiff_part = 1875 # young modulus of the stiff part
@@ -79,12 +79,10 @@ rigid_top = 2 # hauteur de rigidification de l'extrémité des modules en mm
 goal_pas = 5
 
 if version == 1 : # V1
-
     h_module = 58 # hauteur du module en mm # Mieux parce que prend en compte la taille de l'effecteur ?
     chamber_model =  'stiff_flop_58_chamber_normal.stl'
     module_model = 'stiff_flop_58.vtk'
     YM_soft = 30 #30 # young modulus of the soft part (kPa)
-
 
     # h_module = 56 # hauteur du module en mm
     # chamber_model =  'model_chambres_55_simp.stl'
@@ -95,14 +93,16 @@ if version == 1 : # V1
 
 elif version == 2 : # V2 module
     h_module = 55 # hauteur du module en mm
+    chamber_model =  'chambres_55_4it.stl'
     # chamber_model =  'model_chambres_v2_reg.stl'
-    chamber_model =  'model_chambre_regulier_cutted.stl'
+    # chamber_model =  'chambres_55cutted.stl'
+    # chamber_model =  'model_chambre_regulier_cutted.stl'
     # module_model = 'coeur_module01.vtk'
     # module_model = 'stiff_flop_indicesOK_flip05.vtk'
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk'
     radius = 5.75 
-    YM_soft = 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 50 # 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -126,7 +126,7 @@ elif version == 4 : # V4 module
 # Paramètres Simulation
 name_module = 'Module'
 name_cavity = 'Bellow'
-nb_poutre = nb_module*4
+nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
 h_effector = h_module * nb_module
 
 d_et_h = str(datetime.now())
@@ -136,7 +136,7 @@ position = [0,0,h_effector]
 
 ## Trajectory parameters :
 circle_radius = 25
-nb_iter_circle = 1800# 600 eq to 1min/tour approximately
+nb_iter_circle = 200 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 
 nb_iter_square = 150# 600 eq 10min/tour /// 
@@ -187,7 +187,7 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
     rootNode.addObject('DefaultVisualManagerLoop')   
 
     rigidFramesNode  = rootNode.addChild('RigidFrames')
-    rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='1', vdamping=0)
+    rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='0', vdamping=0,rayleighStiffness='0.3',rayleighMass='0.1')
     rigidFramesNode.addObject('SparseLDLSolver', name='ldlsolveur',template="CompressedRowSparseMatrixd")    
     # rigidFramesNode.addObject('SofaDenseSolver', name='ldlsolveur')  # test  
     rigidFramesNode.addObject('GenericConstraintCorrection')
@@ -226,6 +226,14 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
         controlledPoints.addObject('MechanicalObject', name="actuatedPoints", template="Vec3",position=[h_effector, 0, 0])#,rotation=[0, 90 ,0]) # classic
         controlledPoints.addObject('PositionEffector', template="Vec3d", indices='0', effectorGoal="@../../../goal/goalM0.position") # classic
         controlledPoints.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
+
+        # ## GOAL ON BEAM 
+        # controlledPoints = rigidFramesNode.addChild('controlledPoints')
+        # controlledPoints.addObject('MechanicalObject', name="actuatedPoints", template="Vec3",position=[h_effector, 0, 0])#,rotation=[0, 90 ,0]) # classic
+        # controlledPoints.addObject('PositionEffector', template="Vec3d", indices='0', effectorGoal="@../../goal/goalM0.position") # classic
+        # # controlledPoints.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
+        # controlledPoints.addObject('IdentityMapping', mapForces=False, mapMasses=False)
+
 
         # ## TESTS
         # controlledPoints = rigidFramesNode.addChild('controlledPoints')
@@ -307,14 +315,15 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=0,beam_flag = 1))
-                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
+                # rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal,name = 'goalM0',circle_height = circle_height+0,module=stiff))
 
                 #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
 
                 # rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
 
                 rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
-                rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,5]))
+                # rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,0]))
         elif act_flag == 1 :
             rootNode.addObject(StiffController(pas=pas,module = stiff,RootNode = rootNode))
             #rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))

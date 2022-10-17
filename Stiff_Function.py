@@ -96,7 +96,7 @@ class Stiff_Flop() :
         # module.addObject('EulerImplicitSolver', name='odesolver', rayleighStiffness=0.1, rayleighMass=0.1)
         # module.addObject('SparseLDLSolver', name='directSolver' , template="CompressedRowSparseMatrixd")
 
-        nb_slices = 10
+        nb_slices = 16
 
         module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
         engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
