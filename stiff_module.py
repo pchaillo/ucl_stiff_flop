@@ -34,10 +34,10 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 
-act_flag = 0 # set 0 for IP and 1 for direct control
+act_flag = 1 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm
-record = 1 # 0 => no record // 1 => record
-setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+record = 0 # 0 => no record // 1 => record
+setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 
 close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
@@ -51,7 +51,7 @@ else :
 
 dt = 0.001
 
-# Paramètres controller
+# Paramètres controller 
 pas = 20 # pour argument controller (attention aux unités !)
 max_pression = 120 # en kPa
 min_pression = 0
@@ -62,11 +62,11 @@ value_type = "pressure" # pour commande en pression (avec beam5)
 
 
 # Paramètres ROBOT
-nb_module = 1 # nombre de modules
+nb_module = 2 # nombre de modules
 # module
 masse_module = 0.01 # en kg, soit 10g
 # soft part
-coef_poisson = 0.45 # coefficient de poisson
+coef_poisson = 0.4 # coefficient de poisson
 # stiff parts
 rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts  
 YM_stiff_part = 1875 # young modulus of the stiff part

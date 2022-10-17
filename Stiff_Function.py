@@ -94,7 +94,7 @@ class Stiff_Flop() :
 
         nb_slices = 10
 
-        module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [0,0,0],rotation=[0, 0 , 90])
+        module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
         engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
         module.addObject('HexahedronSetTopologyContainer', position='@engine.extrudedVertices', hexas='@engine.extrudedHexas')
         module.addObject('HexahedronSetTopologyModifier')
