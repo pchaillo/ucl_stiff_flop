@@ -35,9 +35,10 @@ import time
 ############## PARAM7TRES A FIXER ####################
 
 act_flag = 1 # set 0 for IP and 1 for direct control
-version = 2 # v1 d=14mm // v2 d=11.5mm
+version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
 
 close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
@@ -62,7 +63,7 @@ value_type = "pressure" # pour commande en pression (avec beam5)
 
 
 # Paramètres ROBOT
-nb_module = 2 # nombre de modules
+nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # en kg, soit 10g
 # soft part
@@ -149,7 +150,7 @@ point_tab = [ [10,10,60],[10,5,60],[10,0,60],[10,-5,60],[10,-10,60],[5,-10,60],[
 
 def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
-    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression)
+    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field)
     
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0

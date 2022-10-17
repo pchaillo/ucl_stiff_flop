@@ -19,21 +19,26 @@ def EffectorGoal(node, position,name,taille):
     return goal
 
 def define_mesh_path(mesh_name,out_flag):
-        path = getcwd()
-        if out_flag == 0:
-            inter = '/mesh/'
-        else :
-            inter = '/ucl_collaboration/mesh/'
+    path = getcwd()
+    if out_flag == 0:
+        inter = '/mesh/'
+    else :
+        inter = '/ucl_collaboration/mesh/'
 
-        file_path = path + inter +mesh_name
-        print("########################### OK")
-        print(str(file_path))
-        return file_path
+    file_path = path + inter +mesh_name
+    print("########################### OK")
+    print(str(file_path))
+    return file_path
+
+def get_extension(string):
+    length = len(string)
+    string_out = string[length-4:length]
+    return string_out
 
 
 class Stiff_Flop() :  
 
-    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression):
+    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field):
         self.h_module = h_module
         self.init_pressure_value = init_pressure_value
         self.value_type = value_type
@@ -54,6 +59,7 @@ class Stiff_Flop() :
         self.rigid_top = rigid_top
         self.rigid_bool = rigid_bool
         self.min_pression = min_pression
+        self.force_field = force_field
 
     def createCavity(self,parent,name_c,i,cavity_model,act_flag): # for v1 -------
         bellowNode = parent.addChild(name_c+str(i+1))
@@ -80,13 +86,11 @@ class Stiff_Flop() :
         module.addObject('MeshVTKLoader', name='loader', filename=model,translation = [0,0,self.h_module*i], rotation=[0, 0 , 0]) # 
         module.addObject('MeshTopology', src='@loader', name='container')
         module.addObject('MechanicalObject', name='tetras', template='Vec3', showObject=True, showObjectScale=1,rotation=[0, 90 , 0])#,translation = [0,0,h_module*i])
-        module.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part) # stable youngModulus = 500 / réel ? = 103
+        # module.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part) # stable youngModulus = 500 / réel ? = 103
         module.addObject('UniformMass', totalMass=self.masse_module)
         return module
 
     def createModule_extrude(self,parent,name_c,i,model):
-        print("0000AAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-
         module = parent.addChild('stiff_flop'+str(i+1))
 
         # module.addObject('EulerImplicitSolver', name='odesolver', rayleighStiffness=0.1, rayleighMass=0.1)
@@ -103,7 +107,7 @@ class Stiff_Flop() :
         module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5", ry="0", rz="0")#, dx="55", dy="50", dz="-25", )
         # module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5",dz = h_seal)#,translation = [0,0,h_seal*10])#, ry="0", rz="-90", dx="55", dy="50", dz="-25", )
         module.addObject('UniformMass', totalMass='0.05')
-        module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
+        # module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
         return module
 
     def createRobot(self,parent,name,out_flag,act_flag):
@@ -118,8 +122,18 @@ class Stiff_Flop() :
             chamber_model_path = define_mesh_path(self.chamber_model,out_flag)
 
             name = 'module'
-            # module = self.createModule(parent,name,i,module_model_path)
-            module = self.createModule_extrude(parent,name,i,module_model_path)
+
+            extension = get_extension(self.module_model)
+            if extension == ".obj":
+                module = self.createModule_extrude(parent,name,i,module_model_path)
+            elif extension == ".vtk" :
+                module = self.createModule(parent,name,i,module_model_path)
+
+            if self.force_field == 0 :
+                module.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part) # stable youngModulus = 500 / réel ? = 103
+            elif self.force_field == 1 :
+                module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
+
             module.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./tetras')# , useCurvAbs = False ) fait planter
 
            ### choisir strict a False ou True
