@@ -1,0 +1,17 @@
+Caracteristiques des modules de la simulation : 
+ Hauteur du module (en mm) : , 55
+ Pression initiale : , 0
+ Module de Young des parties souples : , 65
+ Module de Young des parties rigides : , 1875
+ Coefficient de Poisson : , 0.1
+ Nombre de modules robotiques : ,1
+ Nombre de paires de cavites par module : , 3
+ Nombre de poutres le long de l ensemble des modules : , 17
+ Pression maximale : , 20.0
+ Masse d un module (en kg) : , 0.01
+ Application des parties rigides : , 0
+ Modele 3D des modules : , stiff_flop_indicesOK_flip.obj
+ Modele 3D des chambres : , chambres_55_4it.stl
+ K_I : , 0
+ K_P: , 0
+ Pas de temps : , 0.1

@@ -116,7 +116,7 @@ class CloseLoopController2(Sofa.Core.Controller):
             inputPos = array(self.inputMO1.position[0])
             trackingPos = array(self.trackingMO1.position[0])
             # outputPos = array(self.outputMO1.position[0])
-            if (~math.isnan(trackingPos[0])):
+            if (math.isnan(trackingPos[0]) == 0):
                 print("Tracking posistion is")
             # print(outputPos)
                 print(trackingPos)
@@ -137,7 +137,7 @@ class CloseLoopController2(Sofa.Core.Controller):
 
                 self.outputPos[0] = inputPos[0] + 2*error[0]*self.K_P + 1.5*self.integrate_error[0]*self.K_I
                 self.outputPos[1] = inputPos[1] + 2*error[1]*self.K_P + 1.5*self.integrate_error[1]*self.K_I
-                self.outputPos[2] = inputPos[2] + 1*error[2]*self.K_P + 1*self.integrate_error[2]*self.K_I
+                self.outputPos[2] = inputPos[2] + 1.2*error[2]*self.K_P + 1.2*self.integrate_error[2]*self.K_I
                 print('corrected position is')
                 print(self.outputPos)
             

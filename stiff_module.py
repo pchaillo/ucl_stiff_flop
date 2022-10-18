@@ -40,15 +40,15 @@ record = 1 # 0 => no record // 1 => record
 setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
 
-close_loop = 0 # 0 => no close loop
+close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
     shift = 0#5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.1
+    K_P = 0.01 #0.1
     # K_I = 0.0001
-    K_I = 0.0005
+    K_I = 0.05
 
 dt = 0.1
 
@@ -67,7 +67,7 @@ nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # en kg, soit 10g
 # soft part
-coef_poisson = 0.0 # 0.4 # coefficient de poisson
+coef_poisson = 0.15 # 0.4 # coefficient de poisson
 # stiff parts
 rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts  
 YM_stiff_part = 1875 # young modulus of the stiff part
@@ -93,8 +93,8 @@ if version == 1 : # V1
 
 elif version == 2 : # V2 module
     h_module = 55 # hauteur du module en mm
-    chamber_model =  'chambres_55_4it.stl'
-    # chamber_model =  'model_chambres_v2_reg.stl'
+    chamber_model =  'chambres_55_4it.stl'  # 55 mm
+    #chamber_model =  'model_chambres_v2_reg.stl' ### 
     # chamber_model =  'chambres_55cutted.stl'
     # chamber_model =  'model_chambre_regulier_cutted.stl'
     # module_model = 'coeur_module01.vtk'
@@ -102,13 +102,13 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk'
     radius = 5.75 
-    YM_soft = 60# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 75# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
     h_module = 60 # hauteur du module en mm
     chamber_model =  'model_chambres_generic_60_simp.stl'
-    # chamber_model =  'model_chambres_v2_90_test.stl'
+    # chamber_model =  'model_chambres_v2_90_test.stl'  ###  
     module_model = 'model_module_v3_canule_ext_60.vtk'
     radius = 5.75 
     YM_soft = 15 # young modulus of the soft part (kPa)
@@ -136,12 +136,12 @@ position = [0,0,h_effector]
 
 ## Trajectory parameters :
 circle_radius = 20
-nb_iter_circle = 200 # 600 eq to 1min/tour approximately
+nb_iter_circle = 600 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 
 nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
-square_radius = 20
+square_radius = 15
 point_tab = [ [10,10,60],[10,5,60],[10,0,60],[10,-5,60],[10,-10,60],[5,-10,60],[5,-5,60],[5,0,60]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 ############## PARAM7TRES -- FIN ####################
@@ -302,9 +302,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
                 #rootNode.addObject(LineTrajectory(nb_iter=20,node = DesiredPosition,name = 'DesiredPositionM0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
                 #rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))
-                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height -5, module=stiff))
+                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height -5, module=stiff))
 
-                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 # rootNode.addObject(SquareTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_square,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 
                 # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
@@ -316,13 +316,13 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=0,beam_flag = 1))
                 # rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
-                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal,name = 'goalM0',circle_height = circle_height+0,module=stiff))
+                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
 
-                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+5,module=stiff))
+                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
 
                 # rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
 
-                rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
+                #rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
                 rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,0]))
         elif act_flag == 1 :
             rootNode.addObject(StiffController(pas=pas,module = stiff,RootNode = rootNode))
