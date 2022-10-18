@@ -34,11 +34,12 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 
-act_flag = 0 # set 0 for IP and 1 for direct control
+act_flag = 1 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 1 # 0 => no record // 1 => record
-setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+record = 0 # 0 => no record // 1 => record
+setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
+auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 
 close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
@@ -92,11 +93,16 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 55 # hauteur du module en mm
-    chamber_model =  'chambres_55_4it.stl'  # 55 mm
-    #chamber_model =  'model_chambres_v2_reg.stl' ### 
-    # chamber_model =  'chambres_55cutted.stl'
-    # chamber_model =  'model_chambre_regulier_cutted.stl'
+    h_module = 52 # hauteur du module en mm
+    if auto_stl == 0:
+        chamber_model =  'chambres_55_4it.stl'  # 55 mm
+        #chamber_model =  'model_chambres_v2_reg.stl' ### 
+        # chamber_model =  'chambres_55cutted.stl'
+        # chamber_model =  'model_chambre_regulier_cutted.stl'
+    elif auto_stl == 1 :
+        stl_base = "cutted_chamber_v2_"
+        chamber_model = stl_base + str(h_module) + '.stl'
+        # chamber_model = auto_stl_choice(h_module,stl_base)
     # module_model = 'coeur_module01.vtk'
     # module_model = 'stiff_flop_indicesOK_flip05.vtk'
     module_model = 'stiff_flop_indicesOK_flip.obj'

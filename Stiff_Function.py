@@ -8,6 +8,9 @@ from os import getcwd
 # - mettre tous les paramètres dans l'initialisation de la variable
 # - appeler ensuite seulemnt createRobot qui appelle les autres fonctions, tous les paramètres étant dans l'initialisation (voir stiff_module.pyscn)
 
+# def auto_stl_choice(h_module,stl_base): 
+#     return
+
 def EffectorGoal(node, position,name,taille):
     goal = node.addChild(name)
     goal.addObject('EulerImplicitSolver', firstOrder=True)
