@@ -100,7 +100,7 @@ elif version == 2 : # V2 module
         # chamber_model =  'chambres_55cutted.stl'
         # chamber_model =  'model_chambre_regulier_cutted.stl'
     elif auto_stl == 1 :
-        stl_base = "cutted_chamber_v2_"
+        stl_base = "cutted_chamber_v2_" # BE CAREFULL? IT WILL ONLY WORK FOR SIZE BETWEEN 50 and 55mm (for the moment)
         chamber_model = stl_base + str(h_module) + '.stl'
         # chamber_model = auto_stl_choice(h_module,stl_base)
     # module_model = 'coeur_module01.vtk'
