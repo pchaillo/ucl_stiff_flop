@@ -39,12 +39,13 @@ version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 c
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
+auto = 0
 
 close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
-    shift = 0#5 # shift in mm between the goal and the goal2 (for grabbing) points
+    shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
     K_P = 0.001 #0.1
     # K_I = 0.0001
@@ -94,7 +95,7 @@ if version == 1 : # V1
 elif version == 2 : # V2 module
     h_module = 55 # hauteur du module en mm
     chamber_model =  'chambres_55_4it.stl'
-    # chamber_model =  'model_chambres_v2_reg.stl'
+    # chamber_model =  'model_chambres_v2_reg.stl' 
     # chamber_model =  'chambres_55cutted.stl'
     # chamber_model =  'model_chambre_regulier_cutted.stl'
     # module_model = 'coeur_module01.vtk'
@@ -311,6 +312,7 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 # rootNode.addObject(PatternTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_circle,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
             else : # open loop ( close_loop == 0 )               
                 #rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
+                rootNode.addObject(PressurePrinter_local(module = stiff,RootNode = rootNode))
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))
 
