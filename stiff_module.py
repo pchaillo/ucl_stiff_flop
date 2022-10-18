@@ -34,14 +34,14 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 
-act_flag = 1 # set 0 for IP and 1 for direct control
+act_flag = 0 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 0 # 0 => no record // 1 => record
-setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+record = 1 # 0 => no record // 1 => record
+setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 
-close_loop = 1 # 0 => no close loop
+close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
@@ -93,7 +93,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 52 # hauteur du module en mm
+    h_module = 53 # hauteur du module en mm
     if auto_stl == 0:
         chamber_model =  'chambres_55_4it.stl'  # 55 mm
         #chamber_model =  'model_chambres_v2_reg.stl' ### 
@@ -108,7 +108,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk'
     radius = 5.75 
-    YM_soft = 75# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 90# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
