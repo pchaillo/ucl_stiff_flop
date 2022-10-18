@@ -23,7 +23,7 @@ from sksurgerynditracker.nditracker import NDITracker # for Aurora tracking
 class ArduinoPressure_UCL(Sofa.Core.Controller):
     # pour envoyer les pressions avec les valves connectées Arduino DUE
     # UCL SETUP
-    def __init__(self,module,*args, **kwargs):
+    def __init__(self,module,dt,*args, **kwargs):
         Sofa.Core.Controller.__init__(self,*args,**kwargs)
         self.RootNode = kwargs["RootNode"]
         self.stiffNode = self.RootNode.getChild('RigidFrames')
@@ -31,12 +31,11 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
         self.nb_poutre = module.nb_poutre
         self.nb_module = module.nb_module
         self.nb_cavity = module.nb_cavity
-        # self.step = step
+        self.time_step = dt
         self.IterSimu = 0 # Counter for dt steps before stopping simulation
         self.ecart = 0 # ecart entre la simulation et la réalité, en mm
         ind = -1
         self.pressure, txt_chmbre = connect.CavityConnect(RootNode=self.RootNode,module=module)
-
         # self.board = pyfirmata.Arduino('/dev/ttyACM0') # pyfirmata connexion
         # self.led = self.board.get_pin('d:13:o')
 
@@ -47,10 +46,10 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
 
     def onAnimateBeginEvent(self, dt): 
         if self.nb_module == 1 :
-            pres_tab = [(self.pressure[0].pressure.value),(self.pressure[1].pressure.value),(self.pressure[2].pressure.value)]
+            pres_tab = [(self.pressure[0].pressure.value/self.time_step),(self.pressure[1].pressure.value/self.time_step),(self.pressure[2].pressure.value/self.time_step)]
             S = "{:,.3f}".format(pres_tab[0]) + "," + "{:,.3f}".format(pres_tab[1]) + "," + "{:,.3f}".format(pres_tab[2]) + ',' + "{:,.3f}".format(0) + "," + "{:,.3f}".format(0) + "," + "{:,.3f}".format(0) +"\n"
         elif self.nb_module == 2 :
-            pres_tab = [self.pressure[0].pressure.value,self.pressure[1].pressure.value,self.pressure[2].pressure.value,self.pressure[3].pressure.value,self.pressure[4].pressure.value,self.pressure[5].pressure.value]
+            pres_tab = [self.pressure[0].pressure.value/self.time_step,self.pressure[1].pressure.value/self.time_step,self.pressure[2].pressure.value/self.time_step,self.pressure[3].pressure.value/self.time_step,self.pressure[4].pressure.value/self.time_step,self.pressure[5].pressure.value/self.time_step]
             S = "{:,.3f}".format(pres_tab[0]) + "," + "{:,.3f}".format(pres_tab[1]) + "," + "{:,.3f}".format(pres_tab[2]) + ',' + "{:,.3f}".format(pres_tab[3]) + "," + "{:,.3f}".format(pres_tab[4]) + "," + "{:,.3f}".format(pres_tab[5]) +"\n"
 
         print(S)

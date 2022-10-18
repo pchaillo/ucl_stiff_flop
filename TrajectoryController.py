@@ -29,7 +29,7 @@ class CircleTrajectory(Sofa.Core.Controller):
 
         def onAnimateBeginEvent(self,e):
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy()
 
             if self.d_flag == 0 :
                 d[0][0] = (self.iter/self.nb_iter_d)*self.r
@@ -66,7 +66,7 @@ class SquareTrajectory(Sofa.Core.Controller):
 
         def onAnimateBeginEvent(self,e):
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy()
 
             # if self.d_flag == 0 :
             #     d[0][0] = (self.iter/self.nb_iter_d)*self.r
@@ -138,7 +138,7 @@ class PatternTrajectory(Sofa.Core.Controller):
 
         def onAnimateBeginEvent(self,e):
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy()
 
             if self.d_flag == 0 :
                 d[0][0] = -(self.iter/self.nb_iter_d)*self.r
@@ -179,7 +179,7 @@ class LineTrajectory(Sofa.Core.Controller):
 
             if self.iter <= self.nb_iter :
 
-                d = copy(self.position.position.value)
+                d = (self.position.position.value).copy()
 
                 d[0][0] = ((self.nb_iter - self.iter)/self.nb_iter)*self.begin[0] + (self.iter/self.nb_iter)*self.end[0]
                 d[0][1] = ((self.nb_iter - self.iter)/self.nb_iter)*self.begin[1] + (self.iter/self.nb_iter)*self.end[1]
@@ -224,7 +224,7 @@ class PointPerPointTrajectory(Sofa.Core.Controller):
             else :
                 pos = self.position_pos.position[0]
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy()
 
             d[0][0] = self.p_tab[self.flag][0]
             d[0][1] = self.p_tab[self.flag][1]

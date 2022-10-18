@@ -54,7 +54,7 @@ class StiffController(Sofa.Core.Controller):
                     print('Switch au mondule n° : ',self.flag+1)
                     # print(self.flag)
 
-            pressureValue = zeros(self.nb_cavity)
+            pressureValue = numpy.zeros(self.nb_cavity)
 
             index = self.flag*self.nb_cavity
             for i in range(self.nb_cavity):
@@ -135,7 +135,7 @@ class GoalKeyboardController(Sofa.Core.Controller):
 
         def onKeypressedEvent(self,e):
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy
 
             if e["key"] == Key.D:
                 d[0][0] += self.pas  
@@ -240,9 +240,9 @@ class GoalShift(Sofa.Core.Controller):
 
         def onAnimateBeginEvent(self,e):
 
-            d = copy(self.position.position.value)
+            d = (self.position.position.value).copy()
 
-            d2 = copy(self.position2.position.value)
+            d2 = (self.position2.position.value).copy()
 
             d[0][0] = d2[0][0] - self.shift_tab[0]
             d[0][1] = d2[0][1] - self.shift_tab[1]
@@ -277,7 +277,7 @@ class PositionPrinterCsv(Sofa.Core.Controller):
         if self.beam_flag == 1 : 
             pos = self.position.position.value[self.nb_poutre-1][0:3]
         else :
-            pos = array(self.position.position[0])
+            pos = numpy.array(self.position.position[0])
             print(pos)
 
         ind = 0
