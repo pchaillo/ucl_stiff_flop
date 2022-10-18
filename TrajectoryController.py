@@ -3,11 +3,9 @@
 import Sofa.Core
 import Sofa.constants.Key as Key
 from spicy import *
-# from spicy import distance
 import math
 import numpy as np
 import six
-
 # réunit toutes les fonctions python, permettant de réaliser des trajectoires
  ### - CONTROLLER - ###
 
@@ -159,7 +157,7 @@ class PatternTrajectory(Sofa.Core.Controller):
 
             self.position.position = [d[0]]
 
-            self.iter += 1
+
 
 class LineTrajectory(Sofa.Core.Controller):
 # Génère un trajectoire circulaire à l'effecteur
@@ -201,7 +199,7 @@ class PointPerPointTrajectory(Sofa.Core.Controller):
             self.stiffNode_pos = node_pos # for the generic one
             self.position_pos = self.stiffNode_pos.getObject(name_pos)
 
-            self.iter = 0 # numérote les itérations
+            self.iter = 1 # numérote les itérations
 
             self.p_tab = point_tab 
 
@@ -210,7 +208,7 @@ class PointPerPointTrajectory(Sofa.Core.Controller):
             self.nb_poutre = module.nb_poutre
 
             self.err_d = err_d # desired error
-            self.err_nb = 10 # it will recquire 50 iteration with the good error to go to the next point
+            self.err_nb = 25 # it will recquire 50 iteration with the good error to go to the next point
             self.err_incr = 0
 
             self.shift = shift
@@ -226,25 +224,36 @@ class PointPerPointTrajectory(Sofa.Core.Controller):
 
             d = (self.position.position.value).copy()
 
+
             d[0][0] = self.p_tab[self.flag][0]
             d[0][1] = self.p_tab[self.flag][1]
             d[0][2] = self.p_tab[self.flag][2]
-
+            print('d is')
+            print(d)
             self.position.position = [d[0]]
 
             d2 = d
             d2[0][2] = self.p_tab[self.flag][2] - self.shift
 
-            erreur = np.linalg.norm(pos-d2[0])
+            #erreur = np.linalg.norm(pos-d2[0])
+            erreur = 0
             print(erreur)
+
+            #if self.iter % 10 == 0:
+                #self.flag += 1
+                    #if self.flag >= len(self.p_tab):
+                         #self.flag =0
 
             if erreur < self.err_d :
                 self.err_incr += 1
                 if self.err_incr >= self.err_nb :
                     self.flag += 1
+                    self.err_incr = 0
                     if self.flag >= len(self.p_tab):
                         self.flag =0
-            else :
-                self.err_incr = 0
+                        
+            #else :
+                #self.err_incr = 0
 
             self.iter += 1
+

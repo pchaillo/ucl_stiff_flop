@@ -41,15 +41,15 @@ setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DE
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 
-close_loop = 0 # 0 => no close loop
+close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
     shift = 0#5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.01 #0.1
+    K_P = 0.001 #0.1
     # K_I = 0.0001
-    K_I = 0.05
+    K_I = 0.02
 
 dt = 0.1
 
@@ -93,7 +93,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 53 # hauteur du module en mm
+    h_module = 54 # hauteur du module en mm
     if auto_stl == 0:
         chamber_model =  'chambres_55_4it.stl'  # 55 mm
         #chamber_model =  'model_chambres_v2_reg.stl' ### 
@@ -145,10 +145,13 @@ circle_radius = 20
 nb_iter_circle = 600 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 
-nb_iter_square = 150# 600 eq 10min/tour /// 
+nb_iter_square = 200# 600 eq 10min/tour /// 
 square_height = circle_height
 square_radius = 15
-point_tab = [ [10,10,60],[10,5,60],[10,0,60],[10,-5,60],[10,-10,60],[5,-10,60],[5,-5,60],[5,0,60]] # once the robot will have reach all the positions, he will start again with the 1st position
+
+point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,60], [-5,5,60], [-10,10,60],[-10,5,60],[-10,0,60],[-10,-5,60],[-10,-10,60],[-5,-10,60],[-5,-5,60],[-5,0,60], [0,0,60], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
+
+
 
 ############## PARAM7TRES -- FIN ####################
 
@@ -306,15 +309,15 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 rootNode.addObject(CloseLoopController2(name="CloseLoopController",RootNode=rootNode, K_P = K_P, K_I = K_I))
 
 
-                #rootNode.addObject(LineTrajectory(nb_iter=20,node = DesiredPosition,name = 'DesiredPositionM0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
+                #rootNode.addObject(LineTrajectory(nb_iter=10,node = DesiredPosition,name = 'DesiredPositionM0',p_begin = [0, 0 , 55], p_end = [15, -15 , 60]))
                 #rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))
                 #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height -5, module=stiff))
 
-                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 # rootNode.addObject(SquareTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_square,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 
                 # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
-                # rootNode.addObject(PatternTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_circle,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
+                rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))   
             else : # open loop ( close_loop == 0 )               
                 #rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
 
