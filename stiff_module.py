@@ -33,15 +33,16 @@ from UCL_Controller import *
 import time
 
 ############## PARAM7TRES A FIXER ####################
-
+## FLAG ##
 act_flag = 0 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 1 # 0 => no record // 1 => record
-setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
-force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field
+record = 0 # 0 => no record // 1 => record
+setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
+dynamic = 0 # 0 => static (first order) // 1 => dynamic
 
-close_loop = 1 # 0 => no close loop
+close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
@@ -53,20 +54,25 @@ else :
 
 dt = 0.1
 
-# Paramètres controller 
-pas = 20*dt # pour argument controller (attention aux unités !) (*dt pour dyn)
-max_pression = 200*dt # en kPa
+## Actuation Parameters ## 
+pas = 20 # Pressure step for direct control (kPa) // pour argument controller (attention aux unités !) (*dt pour dyn)
+max_pression = 200 # Maximal pressure in kPa
 min_pression = 0
 init_pressure_value = 0
 # value_type = "1" # pour commande en volume (avec beam6)
 value_type = "pressure" # pour commande en pression (avec beam5)
 # value_type = "volumeGrowth" # pour commande en pression (avec beam5)
+if dynamic == 1 :
+    pas = pas*dt
+    max_pression = max_pression*dt # Maximal pressure in kPa
+    min_pression = min_pression*dt
+    init_pressure_value = init_pressure_value*dt
 
 
-# Paramètres ROBOT
+## Robot Parameters ##
 nb_module = 1 # nombre de modules
 # module
-masse_module = 0.01 # en kg, soit 10g
+masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
 coef_poisson = 0.15 # 0.4 # coefficient de poisson
 # stiff parts
@@ -74,10 +80,6 @@ rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts
 YM_stiff_part = 1875 # young modulus of the stiff part
 rigid_base = 4 # hauteur de rigidification de la base des modules en mm
 rigid_top = 2 # hauteur de rigidification de l'extrémité des modules en mm
-
-
-### Goal contoller
-goal_pas = 5
 
 if version == 1 : # V1
     h_module = 58 # hauteur du module en mm # Mieux parce que prend en compte la taille de l'effecteur ?
@@ -100,7 +102,7 @@ elif version == 2 : # V2 module
         # chamber_model =  'chambres_55cutted.stl'
         # chamber_model =  'model_chambre_regulier_cutted.stl'
     elif auto_stl == 1 :
-        stl_base = "cutted_chamber_v2_" # BE CAREFULL? IT WILL ONLY WORK FOR SIZE BETWEEN 50 and 55mm (for the moment)
+        stl_base = "cutted_chamber_v2_" # BE CAREFULL -  IT WILL ONLY WORK FOR SIZE BETWEEN 50 and 55mm (for the moment)
         chamber_model = stl_base + str(h_module) + '.stl'
         # chamber_model = auto_stl_choice(h_module,stl_base)
     # module_model = 'coeur_module01.vtk'
@@ -129,26 +131,28 @@ elif version == 4 : # V4 module
     YM_soft = 15 # young modulus of the soft part (kPa)
     nb_cavity = 4  # nombre de cavités (ou paires de cavités)
 
-# Paramètres Simulation
+## Simulation Parameters ##
 name_module = 'Module'
 name_cavity = 'Bellow'
 nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
 h_effector = h_module * nb_module
+goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
 d_et_h = str(datetime.now())
 nom_dossier = d_et_h[0:19]
 
 position = [0,0,h_effector]
 
-## Trajectory parameters :
+## Trajectory parameters ## 
+# CIRCLE
 circle_radius = 20
 nb_iter_circle = 600 # 600 eq to 1min/tour approximately
 circle_height = h_effector
-
+# SQUARE
 nb_iter_square = 200# 600 eq 10min/tour /// 
 square_height = circle_height
 square_radius = 15
-
+# POINT PER POINT TRAJECTORY
 point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,60], [-5,5,60], [-10,10,60],[-10,5,60],[-10,0,60],[-10,-5,60],[-10,-10,60],[-5,-10,60],[-5,-5,60],[-5,0,60], [0,0,60], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 
@@ -159,7 +163,7 @@ point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5
 
 def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
-    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field)
+    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt)
     
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
@@ -196,7 +200,11 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
     rootNode.addObject('DefaultVisualManagerLoop')   
 
     rigidFramesNode  = rootNode.addChild('RigidFrames')
-    rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='0', vdamping=0,rayleighStiffness='0.3',rayleighMass='0.1')
+    if dynamic == 1 :
+        rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='0', vdamping=0,rayleighStiffness='0.3',rayleighMass='0.1')
+    else :
+        rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='1', vdamping=0)
+
     rigidFramesNode.addObject('SparseLDLSolver', name='ldlsolveur',template="CompressedRowSparseMatrixd")    
     # rigidFramesNode.addObject('SofaDenseSolver', name='ldlsolveur')  # test  
     rigidFramesNode.addObject('GenericConstraintCorrection')
@@ -318,7 +326,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 
                 # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
                 rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))   
-            else : # open loop ( close_loop == 0 )               
+            else : # open loop ( close_loop == 0 )     
+                rootNode.addObject(PressurePrinter_local(module = stiff,node = rigidFramesNode))
+        
                 #rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))

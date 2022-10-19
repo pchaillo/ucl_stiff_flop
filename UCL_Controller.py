@@ -31,7 +31,10 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
         self.nb_poutre = module.nb_poutre
         self.nb_module = module.nb_module
         self.nb_cavity = module.nb_cavity
-        self.time_step = dt
+        if module.dyn_flag == 1 :
+            self.time_step = dt
+        else :
+            self.time_step = 1 # pour ne pas prendre en compte l'application du time step sur l'actionnement
         self.IterSimu = 0 # Counter for dt steps before stopping simulation
         self.ecart = 0 # ecart entre la simulation et la réalité, en mm
         ind = -1

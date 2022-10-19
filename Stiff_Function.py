@@ -41,7 +41,7 @@ def get_extension(string):
 
 class Stiff_Flop() :  
 
-    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field):
+    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt):
         self.h_module = h_module
         self.init_pressure_value = init_pressure_value
         self.value_type = value_type
@@ -63,6 +63,8 @@ class Stiff_Flop() :
         self.rigid_bool = rigid_bool
         self.min_pression = min_pression
         self.force_field = force_field
+        self.dyn_flag = dynamic
+        self.dt = dt
 
     def createCavity(self,parent,name_c,i,cavity_model,act_flag): # for v1 -------
         bellowNode = parent.addChild(name_c+str(i+1))
@@ -139,16 +141,20 @@ class Stiff_Flop() :
 
             module.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./tetras')# , useCurvAbs = False ) fait planter
 
-           ### choisir strict a False ou True
-            module.addObject('BoxROI', name='boxROI_base'+str(i+1), box=[self.h_module*i-1, -8, -8, self.h_module*i+self.rigid_base + 1, 8, 8], drawBoxes=False, strict=False,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
-            module.addObject('BoxROI', name='boxROI_top'+str(i+1), box=[self.h_module*(i+1)-self.rigid_top, -8, -8, self.h_module*(i+1)+ 1, 8, 8 ], drawBoxes=False, strict=False,drawTetrahedra = False) # utilisé initialement pour rendre rigide une des parois du robot => ici le sommet du module
-
             if self.rigid_bool == 1 :
+                ## choisir strict a False ou True
+                module.addObject('BoxROI', name='boxROI_base'+str(i+1), box=[self.h_module*i-1, -8, -8, self.h_module*i+self.rigid_base + 1, 8, 8], drawBoxes=False, strict=False,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
+                module.addObject('BoxROI', name='boxROI_top'+str(i+1), box=[self.h_module*(i+1)-self.rigid_top, -8, -8, self.h_module*(i+1)+ 1, 8, 8 ], drawBoxes=False, strict=False,drawTetrahedra = False) # utilisé initialement pour rendre rigide une des parois du robot => ici le sommet du module
                 print("-- Application de la rigidification des extrémités des modules --")
                 modelSubTopo = module.addChild('modelSubTopo')
-                modelSubTopo.addObject('TetrahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_base'+str(i+1)+'.tetrahedraInROI', name='container')
-                modelSubTopo.addObject('TetrahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
-                modelSubTopo.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
+                if self.force_field == 0 :
+                    modelSubTopo.addObject('TetrahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_base'+str(i+1)+'.tetrahedraInROI', name='container')
+                    modelSubTopo.addObject('TetrahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
+                    modelSubTopo.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
+                elif self.force_field == 1: ## NOT WORKING YET
+                    modelSubTopo.addObject('HexahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_base'+str(i+1)+'.tetrahedraInROI', name='container')
+                    modelSubTopo.addObject('HexahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
+                    modelSubTopo.addObject('HexahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
 
             for j in range(self.nb_cavity):
                 name = 'Bellow' + str(j+1)

@@ -24,6 +24,27 @@ def CavityConnect(RootNode,module):
     print(' ')
     return pressure, txt_chmbre
 
+def CavityConnect2(node,module): # Va à terme remplacer l'ancienne version
+    stiffNode = node # argument : parent node of the cavity
+    position = stiffNode.getObject('DOFs')
+    ind = -1
+    pressure = []
+    txt_chmbre = ""
+    print('-------')
+    print('Noeuds connectés au PressurePrinter : ') # ajouter SIMU pour qu'o sache dans quel contexte c'est connecté ?
+    for i in range(module.nb_module):
+        txt_chmbre = txt_chmbre + ' , [Pression module n' + str(i+1) + '] , [Volume module n' + str(i+1) + ']'
+        for j in range(module.nb_cavity):
+            ind = ind + 1
+            node_name = "Bellow" + str(j+1) + str(i+1)            
+            noeud = stiffNode.getChild(node_name)
+            print(node_name)
+            pressure.append(noeud.getObject('SPC'))
+    print('-------')
+    print(' ')
+    return pressure, txt_chmbre
+
+
 def OpenPrintFile(module,txt_chmbre,file_type,nom_fichier):
         path = getcwd()
         d_et_h = str(datetime.now())
