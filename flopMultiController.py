@@ -40,6 +40,11 @@ class StiffController(Sofa.Core.Controller):
             self.max_pression = module.max_pression
             self.nb_module = module.nb_module
             self.nb_cavity = module.nb_cavity
+            if module.dyn_flag == 1:
+                self.time_step = module.dt
+            else :
+                self.time_step = 1
+
 
 
     def onKeypressedEvent(self,e):
@@ -105,7 +110,7 @@ class StiffController(Sofa.Core.Controller):
             print('Control du mondule n° : ',self.flag+1)
             for i in range(self.nb_cavity): # remise valeurs au bon endroit
                 self.pressure[index+i].value = [pressureValue[i]]
-                print('Pression chambre ',i,' : ',pressureValue[i])
+                print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
             print('         ****       ')
 
 ### - VIEWER - ###
@@ -171,6 +176,11 @@ class ArduinoPressure(Sofa.Core.Controller): # à déporter dans le fichier pres
         ind = -1
         self.pressure, txt_chmbre = connect.CavityConnect(RootNode=self.RootNode,module=module)
 
+        if module.dyn_flag == 1:
+            self.time_step = module.dt
+        else :
+            self.time_step = 1
+
         # self.board = pyfirmata.Arduino('/dev/ttyACM0') # pyfirmata connexion
         # self.led = self.board.get_pin('d:13:o')
 
@@ -180,7 +190,7 @@ class ArduinoPressure(Sofa.Core.Controller): # à déporter dans le fichier pres
  
 
     def onAnimateBeginEvent(self, dt): 
-        pres_tab = [copy(self.pressure[0].pressure.value),copy(self.pressure[1].pressure.value),copy(self.pressure[2].pressure.value)]
+        pres_tab = [copy(self.pressure[0].pressure.value)/self.time_step,copy(self.pressure[1].pressure.value)/self.time_step,copy(self.pressure[2].pressure.value)/self.time_step]
         # print(pres_tab)
 
         bar_tab = connect.kPa_to_bar(pres_tab)
@@ -204,11 +214,10 @@ class ArduinoPressure(Sofa.Core.Controller): # à déporter dans le fichier pres
 
 class PressurePrinter_local(Sofa.Core.Controller):
     # Pour print les pressions dans le terminal 
-    def __init__(self,module,*args, **kwargs):
+    def __init__(self,module,node,*args, **kwargs):
         Sofa.Core.Controller.__init__(self,*args,**kwargs)
-        self.RootNode = kwargs["RootNode"]
-        self.stiffNode = self.RootNode.getChild('RigidFrames')
-        self.position = self.stiffNode.getObject('DOFs')
+        # self.stiffNode = node
+        # self.position = self.stiffNode.getObject('DOFs')
         self.nb_poutre = module.nb_poutre
         self.nb_module = module.nb_module
         self.nb_cavity = module.nb_cavity
@@ -216,15 +225,19 @@ class PressurePrinter_local(Sofa.Core.Controller):
         self.IterSimu = 0 # Counter for dt steps before stopping simulation
         self.ecart = 0 # ecart entre la simulation et la réalité, en mm
         ind = -1
-        self.pressure, txt_chmbre = connect.CavityConnect(RootNode=self.RootNode,module=module)
+        self.pressure, txt_chmbre = connect.CavityConnect2(node=node,module=module)
+        if module.dyn_flag == 1:
+            self.time_step = module.dt
+        else :
+            self.time_step = 1
  
 
     def onAnimateBeginEvent(self, dt): 
         # pres_tab = [copy(self.pressure[0].pressure.value),copy(self.pressure[1].pressure.value),copy(self.pressure[2].pressure.value),copy(self.pressure[3].pressure.value),copy(self.pressure[4].pressure.value),copy(self.pressure[5].pressure.value)]
         if self.nb_module == 1 :
-            pres_tab = [self.pressure[0].pressure.value,self.pressure[1].pressure.value,self.pressure[2].pressure.value]
+            pres_tab = [self.pressure[0].pressure.value/self.time_step,self.pressure[1].pressure.value/self.time_step,self.pressure[2].pressure.value/self.time_step]
         elif self.nb_module == 2:
-            pres_tab = [self.pressure[0].pressure.value,self.pressure[1].pressure.value,self.pressure[2].pressure.value,self.pressure[3].pressure.value,self.pressure[4].pressure.value,self.pressure[5].pressure.value]
+            pres_tab = [self.pressure[0].pressure.value/self.time_step,self.pressure[1].pressure.value/self.time_step,self.pressure[2].pressure.value/self.time_step,self.pressure[3].pressure.value/self.time_step,self.pressure[4].pressure.value/self.time_step,self.pressure[5].pressure.value/self.time_step]
         print(str(pres_tab))
         # print(str(pres_tab.to_list()))
 
