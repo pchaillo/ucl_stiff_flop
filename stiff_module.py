@@ -40,13 +40,13 @@ record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
-dynamic = 0 # 0 => static (first order) // 1 => dynamic
+dynamic = 1 # 0 => static (first order) // 1 => dynamic
 
 close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
-    shift = 0#5 # shift in mm between the goal and the goal2 (for grabbing) points
+    shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
     K_P = 0.001 #0.1
     # K_I = 0.0001
@@ -95,10 +95,10 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 54 # hauteur du module en mm
+    h_module = 55 # hauteur du module en mm
     if auto_stl == 0:
-        chamber_model =  'chambres_55_4it.stl'  # 55 mm
-        #chamber_model =  'model_chambres_v2_reg.stl' ### 
+        # chamber_model =  'chambres_55_4it.stl'  # 55 mm
+        chamber_model =  'model_chambres_v2_reg.stl' ### 
         # chamber_model =  'chambres_55cutted.stl'
         # chamber_model =  'model_chambre_regulier_cutted.stl'
     elif auto_stl == 1 :
@@ -108,7 +108,7 @@ elif version == 2 : # V2 module
     # module_model = 'coeur_module01.vtk'
     # module_model = 'stiff_flop_indicesOK_flip05.vtk'
     module_model = 'stiff_flop_indicesOK_flip.obj'
-    # module_model = 'model_module_v2_90.vtk'
+    # module_model = 'model_module_v2_90.vtk' # h_module = 50 du coup
     radius = 5.75 
     YM_soft = 90# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
@@ -134,14 +134,14 @@ elif version == 4 : # V4 module
 ## Simulation Parameters ##
 name_module = 'Module'
 name_cavity = 'Bellow'
-nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
+#nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
+nb_slices = 16
+# nb_poutre_per_module = nb_slices+1
+nb_poutre_per_module = 5
+nb_poutre = nb_module*nb_poutre_per_module
 h_effector = h_module * nb_module
 goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
-d_et_h = str(datetime.now())
-nom_dossier = d_et_h[0:19]
-
-position = [0,0,h_effector]
 
 ## Trajectory parameters ## 
 # CIRCLE
@@ -156,14 +156,17 @@ square_radius = 15
 point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,60], [-5,5,60], [-10,10,60],[-10,5,60],[-10,0,60],[-10,-5,60],[-10,-10,60],[-5,-10,60],[-5,-5,60],[-5,0,60], [0,0,60], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 
+d_et_h = str(datetime.now())
+nom_dossier = d_et_h[0:19]
 
+position = [0,0,h_effector]
 ############## PARAM7TRES -- FIN ####################
 
 # stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool)
 
 def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
-    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt)
+    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices)
     
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0

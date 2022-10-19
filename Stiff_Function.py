@@ -41,7 +41,7 @@ def get_extension(string):
 
 class Stiff_Flop() :  
 
-    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt):
+    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices):
         self.h_module = h_module
         self.init_pressure_value = init_pressure_value
         self.value_type = value_type
@@ -65,6 +65,7 @@ class Stiff_Flop() :
         self.force_field = force_field
         self.dyn_flag = dynamic
         self.dt = dt
+        self.nb_slices = nb_slices
 
     def createCavity(self,parent,name_c,i,cavity_model,act_flag): # for v1 -------
         bellowNode = parent.addChild(name_c+str(i+1))
@@ -101,10 +102,10 @@ class Stiff_Flop() :
         # module.addObject('EulerImplicitSolver', name='odesolver', rayleighStiffness=0.1, rayleighMass=0.1)
         # module.addObject('SparseLDLSolver', name='directSolver' , template="CompressedRowSparseMatrixd")
 
-        nb_slices = 16
+        #nb_slices = 16
 
         module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
-        engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
+        engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=self.nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
         module.addObject('HexahedronSetTopologyContainer', position='@engine.extrudedVertices', hexas='@engine.extrudedHexas')
         module.addObject('HexahedronSetTopologyModifier')
         # finger.createObject('HexahedronSetTopologyAlgorithms')
