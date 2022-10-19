@@ -70,7 +70,7 @@ if dynamic == 1 :
 
 
 ## Robot Parameters ##
-nb_module = 1 # nombre de modules
+nb_module = 2 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
@@ -221,7 +221,7 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
     MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
     DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
     if nb_module == 2 :
-        MeasuredPosition_2 = EffectorGoal(node=rootNode, position = [0,0,h_effector/2],name = 'MeasuredPosition_2',taille = 6)
+        MeasuredPosition_2 = EffectorGoal(node=rootNode, position = [0,0,h_effector/2],name = 'MeasuredPosition_2',taille = 7)
 
     if act_flag == 0 :
         rootNode.addObject('QPInverseProblemSolver', name="QP", printLog='0', saveMatrices = True ,epsilon = 0.01) # initialement epsilon = 0.001

@@ -113,7 +113,7 @@ class AuroraTracking(Sofa.Core.Controller):
 
 class AuroraTracking_2_nodes(Sofa.Core.Controller):
         """Doc string"""
-        def __init__(self, name, node,name2,node2 module, offset=[0,0,0], *args, **kwargs):
+        def __init__(self, name, node,name2,node2, module, offset=[0,0,0], *args, **kwargs):
             Sofa.Core.Controller.__init__(self,args,kwargs)
          #   self.RootNode = kwargs["RootNode"]        # aurora setting 
             self.settings_aurora = { "tracker type": "aurora", "ports to use" : [10]}
@@ -144,7 +144,7 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             y_i_2 = self.aurora_frame[3][1][1][3]
             z_i_2 = self.aurora_frame[3][1][2][3]
             self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
-	        self.displacement_2 = [ -x_i_2, -y_i_2, - z_i_2]
+            self.displacement_2 = [ -x_i_2, -y_i_2, - z_i_2]
             
         def get_data():
             self.aurora_frame = self.tracker.get_frame();
