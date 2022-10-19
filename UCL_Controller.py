@@ -74,16 +74,23 @@ class AuroraTracking(Sofa.Core.Controller):
             h_module = module.h_module
 
             self.z_eff_pos = nb_module * h_module 
+            self.h_module = h_module
             # first frames are invalid so we drop a given number of them
             for frame_to_drop in range(10):
                 self.tracker.get_frame()
             
             self.aurora_frame = self.tracker.get_frame();
-            x_i = self.aurora_frame[3][0][0][3]
-            y_i = self.aurora_frame[3][0][1][3]
-            z_i = self.aurora_frame[3][0][2][3]
-            self.displacement = [ -x_i, -y_i , - z_i ]
-
+            # read the first tracker
+            x_i_1 = self.aurora_frame[3][0][0][3]
+            y_i_1 = self.aurora_frame[3][0][1][3]
+            z_i_1 = self.aurora_frame[3][0][2][3]
+            self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
+            # read the second tracker
+            x_i_2 = self.aurora_frame[3][1][0][3]
+            y_i_2 = self.aurora_frame[3][1][1][3]
+            z_i_2 = self.aurora_frame[3][1][2][3]
+            self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
+	    self.displacement_2 = [ -x_i_2, -y_i_2, - z_i_2]
         def get_data():
             self.aurora_frame = self.tracker.get_frame();
             data = self.aurora_frame[3][0] 
@@ -96,13 +103,17 @@ class AuroraTracking(Sofa.Core.Controller):
         def onAnimateBeginEvent(self,e):
             self.aurora_frame = self.tracker.get_frame();
 
-            x = self.aurora_frame[3][0][0][3]
-            y = self.aurora_frame[3][0][1][3]
-            z = self.aurora_frame[3][0][2][3]
-            
-            pos_raw = [x ,y ,z]
+            x_1 = self.aurora_frame[3][0][0][3]
+            y_1 = self.aurora_frame[3][0][1][3]
+            z_1 = self.aurora_frame[3][0][2][3]
+            x_2 = self.aurora_frame[3][1][0][3]
+            y_2 = self.aurora_frame[3][1][1][3]
+            z_2 = self.aurora_frame[3][1][2][3]
+            pos_raw_1 = [x_1 ,y_1 ,z_1]
+            pos_raw_2 = [x_2 ,y_2 ,z_2]
             print('raw position is')
-            print(pos_raw)
-            if ~math.isnan(pos_raw[0]):
-                pos = [pos_raw[0] + self.displacement[0], pos_raw[1] + self.displacement[1],  self.z_eff_pos + (pos_raw[2] + self.displacement[2])]
-            self.position.position = [pos]
+            print(pos_raw_1)
+            if ~math.isnan(pos_raw_1[0]):
+                pos_1 = [pos_raw_1[0] + self.displacement_1[0], pos_raw_1[1] + self.displacement_1[1],  self.z_eff_pos + (pos_raw_1[2] + self.displacement_1[2])]
+                pos_2 = [pos_raw_2[0] + self.displacement_2[0], pos_raw_2[1] + self.displacement_2[1],  self.self.h_module + (pos_raw_2[2] + self.displacement_2[2])]
+            self.position.position = [pos_1]
