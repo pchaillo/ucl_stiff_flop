@@ -220,6 +220,8 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
     DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
+    if nb_module == 2 :
+        MeasuredPosition_2 = EffectorGoal(node=rootNode, position = [0,0,h_effector/2],name = 'MeasuredPosition_2',taille = 6)
 
     if act_flag == 0 :
         rootNode.addObject('QPInverseProblemSolver', name="QP", printLog='0', saveMatrices = True ,epsilon = 0.01) # initialement epsilon = 0.001
@@ -237,7 +239,6 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
         if close_loop == 0 :
             goal2 = EffectorGoal(node=rootNode, position = [0,0,h_effector+shift],name = 'goal2',taille = 0.5)
 
-
         ## CLASSIC 
         controlledPoints = stiff_flop.addChild('controlledPoints')
         controlledPoints.addObject('MechanicalObject', name="actuatedPoints", template="Vec3",position=[h_effector, 0, 0])#,rotation=[0, 90 ,0]) # classic
@@ -250,7 +251,6 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
         # controlledPoints.addObject('PositionEffector', template="Vec3d", indices='0', effectorGoal="@../../goal/goalM0.position") # classic
         # # controlledPoints.addObject('BarycentricMapping', mapForces=False, mapMasses=False)
         # controlledPoints.addObject('IdentityMapping', mapForces=False, mapMasses=False)
-
 
         # ## TESTS
         # controlledPoints = rigidFramesNode.addChild('controlledPoints')
@@ -287,7 +287,6 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 rootNode.addObject(CsvPressureController(name="simu_csv_controller",module =stiff,step=step,RootNode=rootNode,data_exp=data_exp))#, Step=step))
                 # rootNode.addObject(ProgressivePressure(name="simu_pos_controller", nb_module = nb_module,nb_cavity = nb_cavity,step=step,RootNode=rootNode))#, Step=step))
 
-
     else : # controller runSofa
         if record == 1:
             rootNode.addObject(ParameterPrinterCsv(module =stiff,nom_dossier = nom_dossier,RootNode=rootNode,K_I = K_I, K_P = K_P,dt=dt))
@@ -301,8 +300,11 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 rootNode.addObject(PositionPrinterCsv(child_name = 'goal2',name = 'goal2M0',module =stiff,nom_dossier = nom_dossier,beam_flag = 0,RootNode=rootNode))
 
         if setup == 1:
-            rootNode.addObject(ArduinoPressure_UCL(module = stiff,RootNode = rootNode, dt = dt)) # pour
-            rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))
+            rootNode.addObject(ArduinoPressure_UCL(module = stiff,RootNode = rootNode, dt = dt)) # for UCL setup
+            if nb_module == 1:
+                rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))
+            elif nb_module == 2:
+                rootNode.addObject(AuroraTracking_2_nodes(node = MeasuredPosition,name = 'MeasuredPositionM0',node2 = MeasuredPosition_2,name2 = 'MeasuredPosition_2M0',module =stiff))
         elif setup == 2:
             rootNode.addObject(ArduinoPressure(module = stiff,RootNode = rootNode)) # pour envoyer les pressions calculées par le modèle inverse au robot (hardware) # (mettre après le if suivant !)
             rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
