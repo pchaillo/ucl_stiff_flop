@@ -34,7 +34,7 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 0 # set 0 for IP and 1 for direct control
+act_flag = 1 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
@@ -136,9 +136,8 @@ name_module = 'Module'
 name_cavity = 'Bellow'
 #nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
 nb_slices = 16
-# nb_poutre_per_module = nb_slices+1
-nb_poutre_per_module = 5
-nb_poutre = nb_module*nb_poutre_per_module
+nb_poutre_per_module = nb_slices
+nb_poutre = nb_module*nb_poutre_per_module -1
 h_effector = h_module * nb_module
 goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
