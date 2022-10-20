@@ -37,7 +37,7 @@ import time
 act_flag = 1 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 0 # 0 => no record // 1 => record
-setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
