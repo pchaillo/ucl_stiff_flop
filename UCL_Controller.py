@@ -135,14 +135,14 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             
             self.aurora_frame = self.tracker.get_frame();
             # read the first tracker
-            x_i_1 = self.aurora_frame[3][0][0][3]
-            y_i_1 = self.aurora_frame[3][0][1][3]
-            z_i_1 = self.aurora_frame[3][0][2][3]
+            x_i_1 = self.aurora_frame[3][1][0][3]
+            y_i_1 = self.aurora_frame[3][1][1][3]
+            z_i_1 = self.aurora_frame[3][1][2][3]
             #self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
             # read the second tracker
-            x_i_2 = self.aurora_frame[3][1][0][3]
-            y_i_2 = self.aurora_frame[3][1][1][3]
-            z_i_2 = self.aurora_frame[3][1][2][3]
+            x_i_2 = self.aurora_frame[3][0][0][3]
+            y_i_2 = self.aurora_frame[3][0][1][3]
+            z_i_2 = self.aurora_frame[3][0][2][3]
             self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
             self.displacement_2 = [ -x_i_2, -y_i_2, - z_i_2]
             
@@ -158,12 +158,12 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
         def onAnimateBeginEvent(self,e):
             self.aurora_frame = self.tracker.get_frame();
 
-            x_1 = self.aurora_frame[3][0][0][3]
-            y_1 = self.aurora_frame[3][0][1][3]
-            z_1 = self.aurora_frame[3][0][2][3]
-            x_2 = self.aurora_frame[3][1][0][3]
-            y_2 = self.aurora_frame[3][1][1][3]
-            z_2 = self.aurora_frame[3][1][2][3]
+            x_1 = self.aurora_frame[3][1][0][3]
+            y_1 = self.aurora_frame[3][1][1][3]
+            z_1 = self.aurora_frame[3][1][2][3]
+            x_2 = self.aurora_frame[3][0][0][3]
+            y_2 = self.aurora_frame[3][0][1][3]
+            z_2 = self.aurora_frame[3][0][2][3]
             pos_raw_1 = [x_1 ,y_1 ,z_1]
             pos_raw_2 = [x_2 ,y_2 ,z_2]
             print('raw position1 is')

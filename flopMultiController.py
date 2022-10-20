@@ -335,25 +335,28 @@ class PressurePrinterCsv(Sofa.Core.Controller):
         ind = 0
         # pres = []
         print(str(time.time() - self.start)) 
-        time_txt = ", [" + str(time.time() - self.start) + "]"
+        time_txt = "[" + str(time.time() - self.start) + "]"
         pres_txt = ""
         for i in range(self.nb_module):
             pres_txt = pres_txt + "["
             i0 = ind
             for j in range(self.nb_cavity):
+                #ind = i
                 if self.act_flag == 1 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].value.value[0]) # for controller 
                 elif self.act_flag == 0 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].pressure.value) 
-                    # print(self.pressure[ind].pressure.value)
+                    #print('pressure is')
+                    #print(self.pressure[ind].pressure.value)
                 ind = ind + 1
             pres_txt = pres_txt + "]"
             ind = i0
             pres_txt = pres_txt + ",["
             for j in range(self.nb_cavity):
+                #ind = i
                 pres_txt = pres_txt + ' ' + str(self.pressure[ind].cavityVolume.value)
                 ind = ind + 1
-            pres_txt = pres_txt + "]"
+            pres_txt = pres_txt + "],"
 
         self.fichier_csv.write(pres_txt +time_txt + '\n')
         # self.fichier_csv.write(str(pos) + time_txt +'\n')

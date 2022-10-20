@@ -42,15 +42,15 @@ force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force 
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
 
-close_loop = 0 # 0 => no close loop
+close_loop = 1 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.0012 #0.001
+    K_P = 0#0.0012 for one module#0.001
     # K_I = 0.0001
-    K_I = 0.035 # 0.02
+    K_I = 0.03#0.035 for two modules# 0.02
 
 dt = 0.1
 
@@ -69,7 +69,7 @@ if dynamic == 1 :
     init_pressure_value = init_pressure_value*dt
 
 ## Robot Parameters ##
-nb_module = 1 # nombre de modules
+nb_module = 2 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
@@ -145,8 +145,8 @@ goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
 ## Trajectory parameters ## 
 # CIRCLE
-circle_radius = 15
-nb_iter_circle = 900 # 600 eq to 1min/tour approximately
+circle_radius = 40
+nb_iter_circle = 600 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 # SQUARE
 nb_iter_square = 150# 600 eq 10min/tour /// 
