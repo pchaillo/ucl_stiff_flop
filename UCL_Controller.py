@@ -43,7 +43,7 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
         # self.led = self.board.get_pin('d:13:o')
 
         ### Stefan version
-        self.SerialObj1 = serial.Serial('/dev/ttyACM0', 115200, timeout=0.5) #port used by the arduino mega board
+        self.SerialObj1 = serial.Serial('/dev/ttyACM1', 115200, timeout=0.5) #port used by the arduino mega board
         # print("ééééé ARDUINO CONNEXION OK éééééééééé")
  
 

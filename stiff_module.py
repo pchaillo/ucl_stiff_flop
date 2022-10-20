@@ -34,10 +34,10 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 1 # set 0 for IP and 1 for direct control
+act_flag = 0 # set 0 for IP and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 0 # 0 => no record // 1 => record
-setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+record = 1 # 0 => no record // 1 => record
+setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
@@ -48,9 +48,9 @@ if close_loop == 0 :
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.1
+    K_P = 0.001 #0.001
     # K_I = 0.0001
-    K_I = 0.02
+    K_I = 0.035 # 0.02
 
 dt = 0.1
 
@@ -70,7 +70,7 @@ if dynamic == 1 :
 
 
 ## Robot Parameters ##
-nb_module = 2 # nombre de modules
+nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
@@ -110,7 +110,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk' # h_module = 50 du coup
     radius = 5.75 
-    YM_soft = 90# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 83# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -144,15 +144,15 @@ goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
 ## Trajectory parameters ## 
 # CIRCLE
-circle_radius = 20
-nb_iter_circle = 600 # 600 eq to 1min/tour approximately
+circle_radius = 15
+nb_iter_circle = 900 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 # SQUARE
-nb_iter_square = 200# 600 eq 10min/tour /// 
+nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
-square_radius = 15
+square_radius = 10
 # POINT PER POINT TRAJECTORY
-point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,60], [-5,5,60], [-10,10,60],[-10,5,60],[-10,0,60],[-10,-5,60],[-10,-10,60],[-5,-10,60],[-5,-5,60],[-5,0,60], [0,0,60], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
+point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,55], [-5,5,55], [-10,10,55],[-10,5,55],[-10,0,55],[-10,-5,55],[-10,-10,55],[-5,-10,55],[-5,-5,55],[-5,0,55], [0,0,55], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 
 d_et_h = str(datetime.now())
@@ -323,13 +323,13 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
                 #rootNode.addObject(LineTrajectory(nb_iter=10,node = DesiredPosition,name = 'DesiredPositionM0',p_begin = [0, 0 , 55], p_end = [15, -15 , 60]))
                 #rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))
-                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height -5, module=stiff))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle,node = DesiredPosition,name = 'DesiredPositionM0',circle_height = circle_height, module=stiff))
 
                 #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = DesiredPosition,name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 # rootNode.addObject(SquareTrajectory(RootNode = rootNode, rayon =square_radius, nb_iter = nb_iter_square,child_name = 'DesiredPosition',name = 'DesiredPositionM0',square_height = square_height,module=stiff))
                 
                 # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
-                rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))   
+                #rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))   
             else : # open loop ( close_loop == 0 )     
                 rootNode.addObject(PressurePrinter_local(module = stiff,node = rigidFramesNode))
         
@@ -338,10 +338,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=0,beam_flag = 1))
-                # rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
-                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
 
-                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
+                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
 
                 # rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
 
