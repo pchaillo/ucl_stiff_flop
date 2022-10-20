@@ -42,13 +42,13 @@ force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force 
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
 
-close_loop = 1 # 0 => no close loop
+close_loop = 0 # 0 => no close loop
 if close_loop == 0 :
     K_P = 0
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.001
+    K_P = 0.0012 #0.001
     # K_I = 0.0001
     K_I = 0.035 # 0.02
 
@@ -151,9 +151,11 @@ circle_height = h_effector
 # SQUARE
 nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
-square_radius = 15
+square_radius = 10
 # POINT PER POINT TRAJECTORY
-point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,55], [-5,5,55], [-10,10,55],[-10,5,55],[-10,0,55],[-10,-5,55],[-10,-10,55],[-5,-10,55],[-5,-5,55],[-5,0,55], [0,0,55], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
+#point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,55], [-5,5,55], [-10,10,55],[-10,5,55],[-10,0,55],[-10,-5,55],[-10,-10,55],[-5,-10,55],[-5,-5,55],[-5,0,55], [0,0,55], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
+
+point_tab = [ [5,5,55], [10,10,55],[10,5,55],[10,0,55],[10,-5,55],[10,-10,55],[5,-10,55],[5,-5,55],[5,0,55], [0,0,55],[0,0,60], [-5,5,60], [-10,10,60],[-10,5,60],[-10,0,60],[-10,-5,60],[-10,-10,60],[-5,-10,60],[-5,-5,60],[-5,0,60], [0,0,60], [0,0,55]] # once the robot will have reach all the positions, he will start again with the 1st position
 
 
 d_et_h = str(datetime.now())
@@ -342,9 +344,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 #rootNode.addObject(PointPerPointTrajectory(node = goal2,name = 'goal2M0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=shift,beam_flag = 1))
 
                 #rootNode.addObject(PointPerPointTrajectory(node = goal,name = 'goalM0',module = stiff,point_tab = point_tab, node_pos = rigidFramesNode, name_pos = 'DOFs',err_d = 50,shift=0,beam_flag = 1))
-                #rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
+                rootNode.addObject(CircleTrajectory(rayon =circle_radius, nb_iter = nb_iter_circle, node = goal2,name = 'goal2M0',circle_height = circle_height+0,module=stiff))
 
-                rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
+                #rootNode.addObject(SquareTrajectory(rayon =square_radius, nb_iter = nb_iter_square,node = goal2,name = 'goal2M0',square_height = square_height+0,module=stiff))
 
                 # rootNode.addObject(PolhemusTracking(node = MeasuredPosition,name = 'MeasuredPositionM0',offset = [0,0,h_effector]) )
 
