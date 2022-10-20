@@ -3,6 +3,7 @@ import Sofa.Core
 # utilise Rigidify de STLIB
 #from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
+from math import sin,cos, sqrt, acos, radians
 
 # permet d'initialiser un robot au nb de module voulu :
 # - mettre tous les paramètres dans l'initialisation de la variable
@@ -41,7 +42,7 @@ def get_extension(string):
 
 class Stiff_Flop() :  
 
-    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices):
+    def __init__(self,h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model, nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices,r_disk_chamber,r_cavity):
         self.h_module = h_module
         self.init_pressure_value = init_pressure_value
         self.value_type = value_type
@@ -66,6 +67,12 @@ class Stiff_Flop() :
         self.dyn_flag = dynamic
         self.dt = dt
         self.nb_slices = nb_slices
+        self.r_disk_chamber = r_disk_chamber
+        self.r_cavity = r_cavity
+
+        self.r_disk_box = r_disk_chamber # - r_cavity*1.2 # *1.2 just to be a bit smaller
+        self.l_box = r_cavity*2.6 # Box length.  2* because it's radius and not diameter, and *0.6 more to be a bit bigger than the cavities itself
+
 
     def createCavity(self,parent,name_c,i,cavity_model,act_flag): # for v1 -------
         bellowNode = parent.addChild(name_c+str(i+1))
@@ -116,12 +123,42 @@ class Stiff_Flop() :
         # module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
         return module
 
+    def createCavityFromFEM(self,parent,i):
+        # for j in range(self.nb_cavity): pour la prochaine version plus universelle
+
+        Dx = self.r_disk_box*sin(radians(30))
+        Dy = self.r_disk_box*cos(radians(30))
+        Ex = -self.r_disk_box
+        Ey = 0
+        Fx = self.r_disk_box*cos(radians(60))
+        Fy = - self.r_disk_box*sin(radians(60))
+
+        D1x = Dx + self.l_box
+        D1y = Dy
+        F1x = Fx + self.l_box
+        F1y = Fy
+
+        E2x = Ex - self.l_box*sin(radians(30))
+        E2y = Ey - self.l_box*cos(radians(30))
+        F2x = Fx - self.l_box*sin(radians(30))
+        F2y = Fy - self.l_box*cos(radians(30))
+
+        D3y = Dy + self.l_box*cos(radians(30))
+        D3x = Dx - self.l_box*sin(radians(30))
+        E3x = Ex - self.l_box*sin(radians(30))
+        E3y = Ey + self.l_box*cos(radians(30))
+
+        parent.addObject('BoxROI', name='CavityBox_0'+str(i+1), box=[self.h_module*i-1, Fy, Fx, self.h_module + 1, D1y, D1x], drawBoxes=True, strict=True,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
+
+
 
     def createRobot(self,parent,name,out_flag,act_flag):
 
         print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
 
         for i in range(self.nb_module):
+
+          #  self.createCavityFromFEM(parent,i)
 
             parent.addObject('MechanicalMatrixMapper',template='Rigid3d,Rigid3d', object1='@DOFs', object2='@DOFs', nodeToParse='@./stiff_flop'+str(i+1))  # je ne projete que dans la structure globale => mechanical object
             
@@ -144,9 +181,10 @@ class Stiff_Flop() :
             module.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./tetras')# , useCurvAbs = False ) fait planter
 
             if self.rigid_bool == 1 :
-                ## choisir strict a False ou True
-                module.addObject('BoxROI', name='boxROI_base'+str(i+1), box=[self.h_module*i-1, -8, -8, self.h_module*i+self.rigid_base + 1, 8, 8], drawBoxes=False, strict=False,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
-                module.addObject('BoxROI', name='boxROI_top'+str(i+1), box=[self.h_module*(i+1)-self.rigid_top, -8, -8, self.h_module*(i+1)+ 1, 8, 8 ], drawBoxes=False, strict=False,drawTetrahedra = False) # utilisé initialement pour rendre rigide une des parois du robot => ici le sommet du module
+                ## choisir strict a False ou True = > pour ne prendre que les tetras qui sont entièrement dans la boite 
+                # Mettre 8 en fct du rayon du module ?
+                module.addObject('BoxROI', name='boxROI_base'+str(i+1), box=[self.h_module*i-1, -8, -8, self.h_module*i+self.rigid_base + 1, 8, 8], drawBoxes=True, strict=True,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
+                module.addObject('BoxROI', name='boxROI_top'+str(i+1), box=[self.h_module*(i+1)-self.rigid_top, -8, -8, self.h_module*(i+1)+ 1, 8, 8 ], drawBoxes=True, strict=True,drawTetrahedra = False) # utilisé initialement pour rendre rigide une des parois du robot => ici le sommet du module
                 print("-- Application de la rigidification des extrémités des modules --")
                 modelSubTopo = module.addChild('modelSubTopo')
                 if self.force_field == 0 :
@@ -154,6 +192,7 @@ class Stiff_Flop() :
                     modelSubTopo.addObject('TetrahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
                     modelSubTopo.addObject('TetrahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
                 elif self.force_field == 1: ## NOT WORKING YET
+                    print("000000000 \n \n Rigidification des extrémités des modules impossible avec Hexahèdres pour l'instant => décocher rigid_bool et relancer la scène \n \n")
                     modelSubTopo.addObject('HexahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_base'+str(i+1)+'.tetrahedraInROI', name='container')
                     modelSubTopo.addObject('HexahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
                     modelSubTopo.addObject('HexahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
