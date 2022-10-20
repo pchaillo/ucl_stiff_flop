@@ -116,6 +116,7 @@ class Stiff_Flop() :
         # module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
         return module
 
+
     def createRobot(self,parent,name,out_flag,act_flag):
 
         print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")

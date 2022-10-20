@@ -137,7 +137,7 @@ name_cavity = 'Bellow'
 #nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
 nb_slices = 16
 nb_poutre_per_module = nb_slices
-nb_poutre = nb_module*nb_poutre_per_module -1
+nb_poutre = nb_module*nb_poutre_per_module +1
 h_effector = h_module * nb_module
 goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 
