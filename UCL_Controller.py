@@ -43,7 +43,7 @@ class ArduinoPressure_UCL(Sofa.Core.Controller):
         # self.led = self.board.get_pin('d:13:o')
 
         ### Stefan version
-        self.SerialObj1 = serial.Serial('/dev/ttyACM1', 115200, timeout=0.5) #port used by the arduino mega board
+        self.SerialObj1 = serial.Serial('/dev/ttyACM0', 115200, timeout=0.5) #port used by the arduino mega board
         # print("ééééé ARDUINO CONNEXION OK éééééééééé")
  
 
@@ -113,7 +113,7 @@ class AuroraTracking(Sofa.Core.Controller):
 
 class AuroraTracking_2_nodes(Sofa.Core.Controller):
         """Doc string"""
-        def __init__(self, name, node,name2,node2, module, offset=[0,0,0], *args, **kwargs):
+        def __init__(self, name,node,name2,node2, module, offset=[0,0,0], *args, **kwargs):
             Sofa.Core.Controller.__init__(self,args,kwargs)
          #   self.RootNode = kwargs["RootNode"]        # aurora setting 
             self.settings_aurora = { "tracker type": "aurora", "ports to use" : [10]}
@@ -123,7 +123,7 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             self.stiffNode = node # for the generic one
             self.position = self.stiffNode.getObject(name)
             self.stiffNode2 = node2 # for the generic one
-            self.position2 = self.stiffNode.getObject(name2)
+            self.position2 = self.stiffNode2.getObject(name2)
             nb_module = module.nb_module
             h_module = module.h_module
 
@@ -138,7 +138,7 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             x_i_1 = self.aurora_frame[3][0][0][3]
             y_i_1 = self.aurora_frame[3][0][1][3]
             z_i_1 = self.aurora_frame[3][0][2][3]
-            self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
+            #self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
             # read the second tracker
             x_i_2 = self.aurora_frame[3][1][0][3]
             y_i_2 = self.aurora_frame[3][1][1][3]
@@ -146,15 +146,15 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             self.displacement_1 = [ -x_i_1, -y_i_1, - z_i_1]
             self.displacement_2 = [ -x_i_2, -y_i_2, - z_i_2]
             
-        def get_data():
-            self.aurora_frame = self.tracker.get_frame();
-            data = self.aurora_frame[3][0] 
+#        def get_data():
+#            self.aurora_frame = self.tracker.get_frame();
+#            data = self.aurora_frame[3][0] 
             
-            x_i = data[0][3]
-            y_i = data[1][3]
-            z_i = data[2][3]
-            return [x_i, y_i, z_i]
-
+#            x_i = data[0][3]
+#            y_i = data[1][3]
+#            z_i = data[2][3]
+#            return [x_i, y_i, z_i]
+#
         def onAnimateBeginEvent(self,e):
             self.aurora_frame = self.tracker.get_frame();
 
@@ -166,11 +166,13 @@ class AuroraTracking_2_nodes(Sofa.Core.Controller):
             z_2 = self.aurora_frame[3][1][2][3]
             pos_raw_1 = [x_1 ,y_1 ,z_1]
             pos_raw_2 = [x_2 ,y_2 ,z_2]
-            print('raw position is')
+            print('raw position1 is')
             print(pos_raw_1)
-            if ~math.isnan(pos_raw_1[0]):
+            print('raw position2 is')
+            print(pos_raw_2)
+            if ~math.isnan(pos_raw_1[0] and pos_raw_2[0] ):
                 pos_1 = [pos_raw_1[0] + self.displacement_1[0], pos_raw_1[1] + self.displacement_1[1],  self.z_eff_pos + (pos_raw_1[2] + self.displacement_1[2])]
-                pos_2 = [pos_raw_2[0] + self.displacement_2[0], pos_raw_2[1] + self.displacement_2[1],  self.self.h_module + (pos_raw_2[2] + self.displacement_2[2])]
+                pos_2 = [pos_raw_2[0] + self.displacement_2[0], pos_raw_2[1] + self.displacement_2[1],  self.h_module + (pos_raw_2[2] + self.displacement_2[2])]
             
             self.position.position = [pos_1]
             self.position2.position = [pos_2]
