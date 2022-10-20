@@ -34,9 +34,9 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 1 # set 0 for IP and 1 for direct control
+act_flag = 0 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 0 # 0 => no record // 1 => record
+record = 1 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
@@ -68,7 +68,6 @@ if dynamic == 1 :
     min_pression = min_pression*dt
     init_pressure_value = init_pressure_value*dt
 
-
 ## Robot Parameters ##
 nb_module = 2 # nombre de modules
 # module
@@ -80,6 +79,8 @@ rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts
 YM_stiff_part = 1875 # young modulus of the stiff part
 rigid_base = 4 # hauteur de rigidification de la base des modules en mm
 rigid_top = 2 # hauteur de rigidification de l'extrémité des modules en mm
+r_disk_chamber = 4 # radius of the disk, were are put the cavities => the distance between the center of the module and the center of the cavity
+r_cavity = 0.75 # radius of the cavity
 
 if version == 1 : # V1
     h_module = 58 # hauteur du module en mm # Mieux parce que prend en compte la taille de l'effecteur ?
@@ -136,7 +137,7 @@ name_module = 'Module'
 name_cavity = 'Bellow'
 #nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
 nb_slices = 16
-nb_poutre_per_module = nb_slices
+nb_poutre_per_module = nb_slices 
 nb_poutre = nb_module*nb_poutre_per_module +1
 h_effector = h_module * nb_module
 goal_pas = 5 # step in mm for displacement of goal point with the keyboard
@@ -165,7 +166,7 @@ position = [0,0,h_effector]
 
 def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
-    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices)
+    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices,r_disk_chamber,r_cavity)
     
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
@@ -300,6 +301,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 rootNode.addObject(PositionPrinterCsv(child_name = 'DesiredPosition',name = 'DesiredPositionM0',module =stiff,nom_dossier = nom_dossier,beam_flag = 0,RootNode=rootNode))
             else :
                 rootNode.addObject(PositionPrinterCsv(child_name = 'goal2',name = 'goal2M0',module =stiff,nom_dossier = nom_dossier,beam_flag = 0,RootNode=rootNode))
+            if nb_module == 2 :
+                rootNode.addObject(PositionPrinterCsv(child_name = 'MeasuredPosition_2',name = 'MeasuredPosition_2M0',module =stiff,nom_dossier = nom_dossier,beam_flag = 0,RootNode=rootNode))
+
 
         if setup == 1:
             rootNode.addObject(ArduinoPressure_UCL(module = stiff,RootNode = rootNode, dt = dt)) # for UCL setup
