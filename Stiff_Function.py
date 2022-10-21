@@ -4,7 +4,7 @@ import Sofa.Core
 #from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
 from math import sin,cos, sqrt, acos, radians
-from spicy import copy
+from spicy import *
 
 # permet d'initialiser un robot au nb de module voulu :
 # - mettre tous les paramètres dans l'initialisation de la variable
@@ -267,11 +267,11 @@ class Stiff_Flop() :
 
         Boite_III_K = module.getObject('boxROI_III_K1')
         print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
-        print(copy(Boite_III_K.pointsInROI.value))
-        print(copy(Boite_III_K.quadInROI.value))
-        print(copy(Boite_III_K.quadIndices.value))
-        print(copy(Boite_III_K.edgesInROI.value))
-        print(copy(Boite_III_K.nbIndices.value))
+        print((Boite_III_K.pointsInROI.value).copy())
+        print((Boite_III_K.quadInROI.value).copy())
+        print((Boite_III_K.quadIndices.value).copy())
+        print((Boite_III_K.edgesInROI.value).copy())
+        print((Boite_III_K.nbIndices.value).copy())
 
         print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
 

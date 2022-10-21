@@ -37,7 +37,7 @@ import time
 act_flag = 0 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 1 # 0 => no record // 1 => record
-setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
+setup = 1 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
@@ -48,9 +48,9 @@ if close_loop == 0 :
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.1
+    K_P = 0.001 #0.0012 for one module
     # K_I = 0.0001
-    K_I = 0.02
+    K_I = 0.02 # 0.035 for one module
 
 dt = 0.1
 
@@ -96,7 +96,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 50 # hauteur du module en mm
+    h_module = 55 # hauteur du module en mm
     if auto_stl == 0:
         # chamber_model =  'chambres_55_4it.stl'  # 55 mm
         chamber_model =  'model_chambres_v2_reg.stl' ### 
@@ -111,7 +111,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk' # h_module = 50 du coup
     radius = 5.75 
-    YM_soft = 90# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 83# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -147,10 +147,10 @@ goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 ## Trajectory parameters ## 
 # CIRCLE
 circle_radius = 20
-nb_iter_circle = 600 # 600 eq to 1min/tour approximately
+nb_iter_circle = 500 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 # SQUARE
-nb_iter_square = 200# 600 eq 10min/tour /// 
+nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
 square_radius = 15
 # POINT PER POINT TRAJECTORY

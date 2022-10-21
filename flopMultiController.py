@@ -10,6 +10,7 @@ import csv
 import time
 import serial
 import math
+from math import ceil
 import numpy
 import six
 # from sksurgerynditracker.nditracker import NDITracker # for Aurora tracking
@@ -354,25 +355,28 @@ class PressurePrinterCsv(Sofa.Core.Controller):
         ind = 0
         # pres = []
         print(str(time.time() - self.start)) 
-        time_txt = ", [" + str(time.time() - self.start) + "]"
+        time_txt = "[" + str(time.time() - self.start) + "]"
         pres_txt = ""
         for i in range(self.nb_module):
             pres_txt = pres_txt + "["
             i0 = ind
             for j in range(self.nb_cavity):
+                #ind = i
                 if self.act_flag == 1 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].value.value[0]) # for controller 
                 elif self.act_flag == 0 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].pressure.value) 
-                    # print(self.pressure[ind].pressure.value)
+                    #print('pressure is')
+                    #print(self.pressure[ind].pressure.value)
                 ind = ind + 1
             pres_txt = pres_txt + "]"
             ind = i0
             pres_txt = pres_txt + ",["
             for j in range(self.nb_cavity):
+                #ind = i
                 pres_txt = pres_txt + ' ' + str(self.pressure[ind].cavityVolume.value)
                 ind = ind + 1
-            pres_txt = pres_txt + "]"
+            pres_txt = pres_txt + "],"
 
         self.fichier_csv.write(pres_txt +time_txt + '\n')
         # self.fichier_csv.write(str(pos) + time_txt +'\n')
@@ -425,14 +429,3 @@ class PositionPrinterTxt(Sofa.Core.Controller): # utile ????
         self.fichier_txt.close()
         print("%%%% Positions Enregistrées en Txt %%%%")
         self.fichier_txt = open(self.nf,'a')
-
-class PrintBox(Sofa.Core.Controller) :
-    def __init__(self,noeud,*args, **kwargs):
-
-
-        Boite_III_K = noeud.getObject('boxROI_III_K1')
-        print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
-        print(copy(Boite_III_K.pointsInROI.value))
-        print(copy(Boite_III_K.quadInROI.value))
-
-        print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
