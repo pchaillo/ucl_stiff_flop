@@ -265,7 +265,7 @@ class GoalShift(Sofa.Core.Controller):
 
 ### - CSV PRINTER - ###
 class PositionPrinterCsv(Sofa.Core.Controller):
-    def __init__(self,module,child_name,name,nom_dossier,beam_flag,*args, **kwargs):
+    def __init__(self,module,child_name,name,nom_dossier,beam_ind = 'null',*args, **kwargs):
         Sofa.Core.Controller.__init__(self,args,kwargs)
         # self.node = args[0]
         self.RootNode = kwargs['RootNode']
@@ -279,19 +279,38 @@ class PositionPrinterCsv(Sofa.Core.Controller):
         if not (os.path.exists(path + '/record/'+ nom_dossier)) :
             os.mkdir(path + '/record/'+ nom_dossier)
 
+        if beam_ind != 'null':
+            child_name = child_name + '_' + str(beam_ind)
+
         self.nf, self.fichier_csv = connect.OpenPrintFile2('.csv',child_name,nom_dossier)
         self.start = time.time()
 
-        self.beam_flag = beam_flag
+        self.beam_ind = beam_ind
 
     def onAnimateBeginEvent(self, dt): 
     # def onKeypressedEvent(self,e):
         # print(self.nf)
-        if self.beam_flag == 1 : 
-            pos = self.position.position.value[self.nb_poutre-1][0:3]
-        else :
+        if self.beam_ind == "null":
             pos = numpy.array(self.position.position[0])
-            print(pos)
+            # print(pos)
+        else : 
+            if self.beam_ind == ceil(self.beam_ind):
+                pos = self.position.position.value[self.beam_ind][0:3]
+            else : 
+                # ### si la valeur n'est pas entière, que le milieu des deux modules tombe entre deux poutres, on prend la moyenne de ces poutres # INUTILE FINALEMENT, LORS DES TESTS JE VOIS QUE POS_A EST TOUJOURS BON
+                # print("77777777777777777777777777__0")
+                # print([ self.beam_ind , ceil(self.beam_ind)])
+                # [pos_a_x,pos_a_y,pos_a_z]  = self.position.position.value[int(ceil(self.beam_ind))][0:3]
+                # [pos_b_x,pos_b_y,pos_b_z]  = self.position.position.value[int(ceil(self.beam_ind)+1)][0:3]
+                # pos = [ (pos_a_x+pos_b_x)/2, (pos_a_y+pos_b_y)/2, (pos_a_z+pos_b_z)/2 ]
+                # print([pos_a_x,pos_a_y,pos_a_z])
+                # print([pos_b_x,pos_b_y,pos_b_z])
+                # print(pos)
+                # print("77777777777777777777777777__1")
+                # ###
+                pos = self.position.position.value[int(ceil(self.beam_ind))][0:3]
+                # print("44444444")
+                # print(pos)
 
         ind = 0
         # pres = []
@@ -335,28 +354,25 @@ class PressurePrinterCsv(Sofa.Core.Controller):
         ind = 0
         # pres = []
         print(str(time.time() - self.start)) 
-        time_txt = "[" + str(time.time() - self.start) + "]"
+        time_txt = ", [" + str(time.time() - self.start) + "]"
         pres_txt = ""
         for i in range(self.nb_module):
             pres_txt = pres_txt + "["
             i0 = ind
             for j in range(self.nb_cavity):
-                #ind = i
                 if self.act_flag == 1 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].value.value[0]) # for controller 
                 elif self.act_flag == 0 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].pressure.value) 
-                    #print('pressure is')
-                    #print(self.pressure[ind].pressure.value)
+                    # print(self.pressure[ind].pressure.value)
                 ind = ind + 1
             pres_txt = pres_txt + "]"
             ind = i0
             pres_txt = pres_txt + ",["
             for j in range(self.nb_cavity):
-                #ind = i
                 pres_txt = pres_txt + ' ' + str(self.pressure[ind].cavityVolume.value)
                 ind = ind + 1
-            pres_txt = pres_txt + "],"
+            pres_txt = pres_txt + "]"
 
         self.fichier_csv.write(pres_txt +time_txt + '\n')
         # self.fichier_csv.write(str(pos) + time_txt +'\n')
@@ -409,3 +425,14 @@ class PositionPrinterTxt(Sofa.Core.Controller): # utile ????
         self.fichier_txt.close()
         print("%%%% Positions Enregistrées en Txt %%%%")
         self.fichier_txt = open(self.nf,'a')
+
+class PrintBox(Sofa.Core.Controller) :
+    def __init__(self,noeud,*args, **kwargs):
+
+
+        Boite_III_K = noeud.getObject('boxROI_III_K1')
+        print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
+        print(copy(Boite_III_K.pointsInROI.value))
+        print(copy(Boite_III_K.quadInROI.value))
+
+        print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
