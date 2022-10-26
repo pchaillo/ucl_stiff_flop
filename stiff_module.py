@@ -5,7 +5,7 @@ import Sofa
 from math import sin,cos, sqrt, acos
 import array
 
-from Stiff_Function import *
+from Stiff_Function_FEM import *
 from flopMultiController import *
 from SimuController_ucl import *
 from TrajectoryController import *
@@ -39,7 +39,7 @@ version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 c
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
-auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
+auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings // 2 => no stl for cavities (Cavities from FEM)
 dynamic = 1 # 0 => static (first order) // 1 => dynamic
 
 close_loop = 0 # 0 => no close loop
@@ -48,14 +48,14 @@ if close_loop == 0 :
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.0012 for one module
+    K_P = 0.001 #0.1
     # K_I = 0.0001
-    K_I = 0.02 # 0.035 for one module
+    K_I = 0.02
 
 dt = 0.1
 
 ## Actuation Parameters ## 
-pas = 20 # Pressure step for direct control (kPa) // pour argument controller (attention aux unités !) (*dt pour dyn)
+pas = 5 # Pressure step for direct control (kPa) // pour argument controller (attention aux unités !) (*dt pour dyn)
 max_pression = 200 # Maximal pressure in kPa
 min_pression = 0
 init_pressure_value = 0
@@ -69,18 +69,21 @@ if dynamic == 1 :
     init_pressure_value = init_pressure_value*dt
 
 ## Robot Parameters ##
-nb_module = 2 # nombre de modules
+nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
-coef_poisson = 0.15 # 0.4 # coefficient de poisson
+coef_poisson = 0.45 # 0.4 # coefficient de poisson
 # stiff parts
-rigid_bool = 0 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts  
+rigid_bool = 1 # 0 => no rigid parts (pas de partie rigide) // 1 => rigids parts  
 YM_stiff_part = 1875 # young modulus of the stiff part
 rigid_base = 4 # hauteur de rigidification de la base des modules en mm
 rigid_top = 2 # hauteur de rigidification de l'extrémité des modules en mm
 r_disk_chamber = 4 + 1 # +1 for the box # radius of the disk, were are put the cavities => the distance between the center of the module and the center of the cavity
 r_cavity = 0.75 # radius of the cavity
+
+seal_file = "stiff_flop_SEAL_good.obj"
+h_seal = 3
 
 if version == 1 : # V1
     h_module = 58 # hauteur du module en mm # Mieux parce que prend en compte la taille de l'effecteur ?
@@ -96,7 +99,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 55 # hauteur du module en mm
+    h_module = 50 # hauteur du module en mm
     if auto_stl == 0:
         # chamber_model =  'chambres_55_4it.stl'  # 55 mm
         chamber_model =  'model_chambres_v2_reg.stl' ### 
@@ -111,7 +114,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk' # h_module = 50 du coup
     radius = 5.75 
-    YM_soft = 83# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 100# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -147,10 +150,10 @@ goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 ## Trajectory parameters ## 
 # CIRCLE
 circle_radius = 20
-nb_iter_circle = 500 # 600 eq to 1min/tour approximately
+nb_iter_circle = 600 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 # SQUARE
-nb_iter_square = 150# 600 eq 10min/tour /// 
+nb_iter_square = 200# 600 eq 10min/tour /// 
 square_height = circle_height
 square_radius = 15
 # POINT PER POINT TRAJECTORY
@@ -167,7 +170,7 @@ position = [0,0,h_effector]
 
 def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
-    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices,r_disk_chamber,r_cavity)
+    stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices,r_disk_chamber,r_cavity,h_seal,seal_file)
     
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
     #rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
@@ -203,38 +206,36 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
     rootNode.addObject('FreeMotionAnimationLoop')
     rootNode.addObject('DefaultVisualManagerLoop')   
 
-    rigidFramesNode  = rootNode.addChild('RigidFrames')
-    if dynamic == 1 :
-        rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='0', vdamping=0,rayleighStiffness='0.3',rayleighMass='0.1')
+    stiff_flop = stiff.createRobot(parent = rootNode, name = "MyStiffFlop",out_flag = out_flag, act_flag = act_flag)
+
+    if nb_module == 2 :
+        stiff_2 = rootNode.getChild('stiff_flop1')
+        BaseBox = stiff_2.addObject('BoxROI', name='boxROI_base', box=[-1, -8, -8, 2, 8, 8], drawBoxes=True, strict=True,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
+        BaseBox.init()
+        stiff_2.addObject('RestShapeSpringsForceField', points=BaseBox.indices.value, angularStiffness=1e5, stiffness=1e5)#, externalpoint = BaseBox)
     else :
-        rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='1', vdamping=0)
+        BaseBox = stiff_flop.addObject('BoxROI', name='boxROI_base', box=[-1, -8, -8, 2, 8, 8], drawBoxes=True, strict=True,drawTetrahedra = False) # si autom complète, mettre 8 dépendant des dimensions du robot
+        BaseBox.init()
+        stiff_flop.addObject('RestShapeSpringsForceField', points=BaseBox.indices.value, angularStiffness=1e5, stiffness=1e5)
 
-    rigidFramesNode.addObject('SparseLDLSolver', name='ldlsolveur',template="CompressedRowSparseMatrixd")    
+    if dynamic == 1 :
+        stiff_flop.addObject('EulerImplicitSolver', firstOrder='0', vdamping=0,rayleighStiffness='0.3',rayleighMass='0.1')
+    else :
+        stiff_flop.addObject('EulerImplicitSolver', firstOrder='1', vdamping=0)
+
+    stiff_flop.addObject('SparseLDLSolver', name='ldlsolveur',template="CompressedRowSparseMatrixd")    
     # rigidFramesNode.addObject('SofaDenseSolver', name='ldlsolveur')  # test  
-    rigidFramesNode.addObject('GenericConstraintCorrection')
+    stiff_flop.addObject('GenericConstraintCorrection')
 
-    rigidFramesNode.addObject('RegularGridTopology',  name='meshLinesCombined',  nx=nb_poutre, ny='1', nz='1', xmax=h_module*nb_module, xmin='0.0', ymin='0', ymax='0',zmin='0',zmax='0')
-    # rigidFramesNode.addObject('RegularGridTopology',  name='meshLinesCombined',  nx='1', ny='1', nz=nb_poutre, xmax='0.0', xmin='0.0', ymin='0', ymax='0',zmin='0',zmax=h_module*nb_module)
-    rigidFramesNode.addObject('MechanicalObject',  name='DOFs', template='Rigid3d', showObject='1', showObjectScale='1', rotation=[0, -90 ,0], translation = [0,0,0]) # -90 on y
-    rigidFramesNode.addObject('BeamInterpolation', name='BeamInterpolation', printLog = '1', defaultYoungModulus=YM_soft_part, dofsAndBeamsAligned='true', straight='1', crossSectionShape='circular', radius=radius)#, radius=5*radius)
-    # rigidFramesNode.addObject('AdaptiveBeamForceFieldAndMass', name='BeamForceField', computeMass='0', massDensity=0.001)
-    rigidFramesNode.addObject('RestShapeSpringsForceField', name='anchor', points='0', stiffness='1e12', angularStiffness='1e12')
-      
-
-    stiff_flop = stiff.createRobot(parent = rigidFramesNode, name = "MyStiffFlop",out_flag = out_flag, act_flag = act_flag)
-
-    if nb_module == 2 :
-        stiff_2 = rigidFramesNode.getChild('stiff_flop1')
-
-    MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
-    DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
-    if nb_module == 2 :
-        MeasuredPosition_2 = EffectorGoal(node=rootNode, position = [0,0,h_effector/2],name = 'MeasuredPosition_2',taille = 7)
+    # MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
+    # DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
+    # if nb_module == 2 :
+    #     MeasuredPosition_2 = EffectorGoal(node=rootNode, position = [0,0,h_effector/2],name = 'MeasuredPosition_2',taille = 7)
 
     if act_flag == 0 :
         rootNode.addObject('QPInverseProblemSolver', name="QP", printLog='0', saveMatrices = True ,epsilon = 0.01) # initialement epsilon = 0.001
 
-        goal = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'goal',taille = 0.5)
+        # goal = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'goal',taille = 0.5)
 
         # goal = rootNode.addChild('Goal')
         # goal.addObject('EulerImplicitSolver', firstOrder=True)
@@ -360,9 +361,8 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 #rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
                 rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,0]))
         elif act_flag == 1 :
-            if nb_module == 1 :
-                rootNode.addObject(StiffController2(pas=pas,module = stiff,parent = stiff_flop))
-            elif nb_module == 2 :
+            rootNode.addObject(StiffController2(pas=pas,module = stiff,parent = stiff_flop))
+            if nb_module == 2 :
                 rootNode.addObject(StiffController3(pas=pas,module = stiff,parent = stiff_flop,node2 = stiff_2))
             #rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))
 

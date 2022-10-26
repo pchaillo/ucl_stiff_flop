@@ -10,7 +10,6 @@ import csv
 import time
 import serial
 import math
-from math import ceil
 import numpy
 import six
 # from sksurgerynditracker.nditracker import NDITracker # for Aurora tracking
@@ -45,6 +44,8 @@ class StiffController(Sofa.Core.Controller):
                 self.time_step = module.dt
             else :
                 self.time_step = 1
+
+
 
     def onKeypressedEvent(self,e):
         
@@ -197,7 +198,6 @@ class StiffController2(Sofa.Core.Controller): # va à termes remplacer le 1er
                 print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
             print('         ****       ')
 
-
 class StiffController3(Sofa.Core.Controller): # va à termes remplacer le 1er
 
     # def __init__(self,pas,max_pression,nb_module,nb_cavity,*args, **kwargs):
@@ -282,7 +282,8 @@ class StiffController3(Sofa.Core.Controller): # va à termes remplacer le 1er
                 self.pressure[index+i].value = [pressureValue[i]]
                 print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
             print('         ****       ')
-        
+
+
 ### - VIEWER - ###
 class PositionViewer(Sofa.Core.Controller):
     def __init__(self,nb_poutre,*args, **kwargs):
@@ -524,28 +525,25 @@ class PressurePrinterCsv(Sofa.Core.Controller):
         ind = 0
         # pres = []
         print(str(time.time() - self.start)) 
-        time_txt = "[" + str(time.time() - self.start) + "]"
+        time_txt = ", [" + str(time.time() - self.start) + "]"
         pres_txt = ""
         for i in range(self.nb_module):
             pres_txt = pres_txt + "["
             i0 = ind
             for j in range(self.nb_cavity):
-                #ind = i
                 if self.act_flag == 1 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].value.value[0]) # for controller 
                 elif self.act_flag == 0 :
                     pres_txt = pres_txt + ' ' + str(self.pressure[ind].pressure.value) 
-                    #print('pressure is')
-                    #print(self.pressure[ind].pressure.value)
+                    # print(self.pressure[ind].pressure.value)
                 ind = ind + 1
             pres_txt = pres_txt + "]"
             ind = i0
             pres_txt = pres_txt + ",["
             for j in range(self.nb_cavity):
-                #ind = i
                 pres_txt = pres_txt + ' ' + str(self.pressure[ind].cavityVolume.value)
                 ind = ind + 1
-            pres_txt = pres_txt + "],"
+            pres_txt = pres_txt + "]"
 
         self.fichier_csv.write(pres_txt +time_txt + '\n')
         # self.fichier_csv.write(str(pos) + time_txt +'\n')
@@ -598,3 +596,14 @@ class PositionPrinterTxt(Sofa.Core.Controller): # utile ????
         self.fichier_txt.close()
         print("%%%% Positions Enregistrées en Txt %%%%")
         self.fichier_txt = open(self.nf,'a')
+
+class PrintBox(Sofa.Core.Controller) :
+    def __init__(self,noeud,*args, **kwargs):
+
+
+        Boite_III_K = noeud.getObject('boxROI_III_K1')
+        print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
+        print(copy(Boite_III_K.pointsInROI.value))
+        print(copy(Boite_III_K.quadInROI.value))
+
+        print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")

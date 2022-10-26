@@ -50,9 +50,8 @@ def CavityConnect2(node,module): # Va à terme remplacer l'ancienne version
     print('-------')
     print(' ')
     return pressure, txt_chmbre
-    
+
 def CavityConnect3(node,node2,module): # Va à terme remplacer l'ancienne version
-    print([node,node2,module])
     stiffNode = node # argument : parent node of the cavity
     # position = stiffNode.getObject('DOFs')
     ind = -1

@@ -10,8 +10,20 @@ Created on Fri Oct 21 16:57:00 2022
 import csv
 import numpy as np
 
-def new_index(points,axis,old_indices): # axis (axe selon lequel on veut trier les points celon l'ordre croissant) = 0 => x //  axis = 1 => y  // axis = 2 => z 
+def new_index(points,axis,old_indices): # 
+    """
+    Fonction pour réindexer (réordonner) des points celon un axe. Les points seront triés dans l'ordre croissant selon cet axe.
 
+    INPUT :
+    - Points : tableau de points à réordonner
+    - axis (axe selon lequel on veut trier les points celon l'ordre croissant) = 0 => x //  axis = 1 => y  // axis = 2 => z 
+    - old indices : tableau des indices des points passés en argument
+
+    OUTPUT :
+    - new_points2 : tableau des points dans le nouvel ordre
+    - li2 : tableau qui contient : Les points dans le nouvel ordre, la position dans le tableau de points et l'indice associé du tableau old_indices
+    (Remplacer par )
+    """
     ###### Pour trier les points et enregistrer les indices   ##### #001
     li=[]
     
@@ -29,6 +41,16 @@ def new_index(points,axis,old_indices): # axis (axe selon lequel on veut trier l
     return [new_points2, li2] # contain the points in the new order and the old associated index
 
 def reindex_mesh(new_points_list,mesh):
+    """
+    Pour changer les indices d'un mesh, en remplacant par les indices du nouveau tableau trié
+
+    INPUT :
+    - new_points_list : tableau des points avec les positions et les indices (format li2 de la fonction précédente)
+    - mesh : maillage dont on veut changer les indices
+
+    OUTPUT :
+    new_mesh : the same mesh but with indices that make reference to the new point tab
+    """
      # ##### Pour réassigner de la bonne façon les noeuds des quads #######" #003
     sort_index = []
     ind = 0
@@ -65,7 +87,6 @@ def read_csv(filename):
     # initializing the titles and rows list
     fields = []
     rows = []
-     
     # reading csv file
     with open(filename, 'r') as csvfile:
         # creating a csv reader object
@@ -77,21 +98,9 @@ def read_csv(filename):
         # extracting each data row one by one
         for row in csvreader:
             rows.append(row)
-     
-        # get total number of rows
-        print("Total no. of rows: %d"%(csvreader.line_num))
-     
-    # printing the field names
-    print('Field names are:' + ', '.join(field for field in fields))
-     
-    # printing first 5 rows
-    print('\nFirst 5 rows are:\n')
-    for row in rows[:5]:
-        # parsing each column of a row
-        for col in row:
-            print("%10s"%col,end=" "),
-        print('\n')
+        
     return rows
+
 #    print(rows)
         
 def rows_to_quad(rows):
@@ -101,20 +110,20 @@ def rows_to_quad(rows):
         if flag == 0:
             flag = 1
             print("OOO")
-            print(i)
+            # print(i)
             a = i[0].split("[")
-            print(a)
+            # print(a)
             b = a[2].split("]")
-            print(b)
+            # print(b)
             c = b[0].split(" ")
-            print(c)
+            # print(c)
         else:
             a = i[0].split("[")
-            print(a)
+            # print(a)
             b = a[1].split("]")
-            print(b)
+            # print(b)
             c = b[0].split(" ")
-            print(c)
+            # print(c)
         l = len(c)
 #        if l != 4 :
 #            print("ATTENTION C4EST PAS DES QUADS ON ARRETE TOUT ALERTE JE REPETE ALERTE CEST PAS DES QUADS REVEILLE MON GARCON")
@@ -134,20 +143,20 @@ def rows_to_points(rows):
         if flag == 0:
             flag = 1
             print("OOO")
-            print(i)
+            # print(i)
             a = i[0].split("[")
-            print(a)
+            # print(a)
             b = a[2].split("]")
-            print(b)
+            # print(b)
             c = b[0].split(" ")
-            print(c)
+            # print(c)
         else:
             a = i[0].split("[")
-            print(a)
+            # print(a)
             b = a[1].split("]")
-            print(b)
+            # print(b)
             c = b[0].split(" ")
-            print(c)
+            # print(c)
 #        if l != 4 :
 #            print("ATTENTION C4EST PAS DES QUADS ON ARRETE TOUT ALERTE JE REPETE ALERTE CEST PAS DES QUADS REVEILLE MON GARCON")
         u = []
@@ -168,10 +177,10 @@ def rows_to_indices(rows):
         if t == 1 :
             c = i[0].split("[")[1]
             c = c.split(" ")
-            print(c)
+            # print(c)
         else :
             c = i[0].split(" ")
-        print(c)
+        # print(c)
         la = len(c)
         if t == lo :
             c2 = c
@@ -181,13 +190,13 @@ def rows_to_indices(rows):
             c3 = c2[la-1].split("]")
 #            print(c3)
             c.append(c3[0])
-        print(c)
+        # print(c)
         l = len(c)
 #        if l != 4 :
 #            print("ATTENTION C4EST PAS DES QUADS ON ARRETE TOUT ALERTE JE REPETE ALERTE CEST PAS DES QUADS REVEILLE TOI MON GARCON")
         u = []
         for k in c:
-            print(k)
+            # print(k)
             if len(k) != 0 :
                 tab.append(int(k))
 #        tab.append(u)
@@ -195,6 +204,9 @@ def rows_to_indices(rows):
 
 
 def quad_2_triangles(quads) :
+    """
+    To convert quads to triangles with keeping the same normals
+    """
     triangles = []
     for q in quads :
         t1 = [q[0], q[1], q[2]]
@@ -230,19 +242,20 @@ def circle_detection(points, pt_per_slice,indices="null"):
 
 def remesh(points,mesh,axis,old_indices = "null"):
     if old_indices == "null" :
+        print("\n \n \n \n ON Y VA PAS NORMALEMENT \n \n \n \n")
         l = len(points)
         old_indices = [k for k in range(l)]
     [new_points, new_points_l] = new_index(points = points, axis = axis,old_indices = old_indices)
     new_mesh = reindex_mesh(new_points_list=new_points_l,mesh=mesh)
     old_ind_eq_tab = []
     for w in range(len(new_points_l)):
-        old_ind_eq_tab.append([ new_points_l[w][1],new_points_l[w][2] ])
+        old_ind_eq_tab.append([ new_points_l[w][1],new_points_l[w][2],w ])
     return [new_points, old_ind_eq_tab ,new_mesh]
 
 def close_cavity(circles,ind_tab): # dirty => you may do better my boy
     circle_bottom = circles[0]
     ind_bottom = ind_tab [0]
-    print(ind_bottom)
+    # print(ind_bottom)
     l = len(circles)
     circle_top = circles[l-1]
     ind_top = ind_tab[l-1]
@@ -258,9 +271,9 @@ def close_cavity(circles,ind_tab): # dirty => you may do better my boy
         ind_a = i
         ind_b = i + 2
         ind_c = i + 1
-        print([ind_a,ind_b,ind_c])
+        # print([ind_a,ind_b,ind_c])
         if ind_b == np.ceil(nb_pt_per_slices):
-            print("Y ALLONS NOUS ? je vais savoir bientpot")
+            # print("Y ALLONS NOUS ? je vais savoir bientpot")
             ind_b = 0
         print([ind_a,ind_b,ind_c])
         
@@ -305,18 +318,18 @@ def close_cavity_2(ind_top,ind_bottom): # dirty => you may do better my boy
     
     new_triangles = []
     nb_pt_per_slices = len(ind_top)
-    print(nb_pt_per_slices)
+    # print(nb_pt_per_slices)
     for i in range(6):
         i = i*2
-        print(i)
+        # print(i)
         ind_a = i
         ind_b = i + 2
         ind_c = i + 1
-        print([ind_a,ind_b,ind_c])
+        # print([ind_a,ind_b,ind_c])
         if ind_b == np.ceil(nb_pt_per_slices):
-            print("Y ALLONS NOUS ? je vais savoir bientpot")
+            # print("Y ALLONS NOUS ? je vais savoir bientpot")
             ind_b = 0
-        print([ind_a,ind_b,ind_c])
+        # print([ind_a,ind_b,ind_c])
         
         new_triangles.append( [ ind_top[ind_a] ,ind_top[ind_b] ,ind_top[ind_c] ] )
         new_triangles.append( [ ind_bottom[ind_c] ,ind_bottom[ind_b] ,ind_bottom[ind_a] ] )
@@ -378,8 +391,8 @@ def ordering_circles(circle,ind_tab,x=1,y=2): # positions des coordonnées x et 
     tab_sup_ordre = sorted (tab_sup, key=lambda item: (item [0][y]))
     tab_inf_ordre = sorted (tab_inf, key=lambda item: (item [0][y]), reverse=True)
 
-    print("RRRRR")
-    print([tab_sup_ordre, tab_inf_ordre])
+    # print("RRRRR")
+    # print([tab_sup_ordre, tab_inf_ordre])
     
     new_circle_pt = []
     new_ind_tab = []
@@ -411,7 +424,38 @@ def invers_normal(mesh):
             element.append(mesh[i][nb_pt-k-1])
         new_mesh.append(element)
     return new_mesh
-                      
+
+def new_idx_from_conv_tab(mesh,tab):
+    lonely_tab = []
+    for j in range(len(tab)):
+        lonely_tab.append(tab[j][2])
+    lonely_tab = np.array(lonely_tab)
+    l = len(mesh)
+    new_mesh = []
+    # print(lonely_tab)
+    for i in range(l):
+        element = []
+        nb_pt = len(mesh[i])
+        for k in range(nb_pt):
+            # print("Looking for : ") ## pour savoir quel point n'est pas trouvé
+            # print(mesh[i][k])
+            value_inx = np.where(lonely_tab  == (mesh[i][k]) )
+            # print(value_inx)
+            value_idx = value_inx[0]
+            # print(value_idx)
+            value_i = value_idx[0]
+            element.append(tab[value_i][1])
+        new_mesh.append(element)
+    return new_mesh  
+
+def shift_tab(tab): # pour décaler tous les éléments d'un tableau de 1, pour pouvoir placer les ressorts
+    l = len(tab)
+    new_tab = []
+    for t in range(l-1) :
+        new_tab.append(tab[t+1])
+    new_tab.append(tab[0])
+    return new_tab
+
 #
 # filename = "quad.csv"
 # file_2 = "points.csv"
