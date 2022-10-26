@@ -45,7 +45,90 @@ class StiffController(Sofa.Core.Controller):
             else :
                 self.time_step = 1
 
+    def onKeypressedEvent(self,e):
+        
+            if e["key"] == Key.T: # switche d'un module à un autre pour l'actionnement
+                if self.flag < self.nb_module - 1:
+                    self.flag = self.flag + 1
+                    print('Switch au mondule n° : ',self.flag+1)
+                    # print(self.flag)
+                else:
+                    self.flag = 0
+                    print('Switch au mondule n° : ',self.flag+1)
+                    # print(self.flag)
 
+            pressureValue = numpy.zeros(self.nb_cavity)
+
+            index = self.flag*self.nb_cavity
+            for i in range(self.nb_cavity):
+                pressureValue[i] = self.pressure[index+i].value.value[0]
+
+            if e["key"] == Key.D:
+                pressureValue[0] += self.pas
+                # print('===========D')
+                if pressureValue[0] > self.max_pression:
+                    pressureValue[0]= self.max_pression
+            if e["key"] == Key.C:
+                pressureValue[0] -= self.pas
+                if pressureValue[0] < 0:
+                    pressureValue[0] = 0
+
+            if e["key"] == Key.F:
+                # print('===========F')
+                pressureValue[1] += self.pas
+                if pressureValue[1] > self.max_pression:
+                    pressureValue[1] = self.max_pression
+            if e["key"] == Key.V: # S déjà pris, je met F à la place
+                pressureValue[1] -= self.pas
+                if pressureValue[1] < 0:
+                    pressureValue[1] = 0
+
+            if e["key"] == Key.G:
+                # print('==========G')
+                pressureValue[2] += self.pas
+                if pressureValue[2] > self.max_pression:
+                    pressureValue[2] = self.max_pression
+            if e["key"] == Key.B:
+                pressureValue[2] -= self.pas
+                if pressureValue[2] < 0:
+                    pressureValue[2] = 0
+
+            if self.nb_cavity > 3:
+                if e["key"] == Key.H:
+                    # print('==========G')
+                    pressureValue[3] += self.pas
+                    if pressureValue[3] > self.max_pression:
+                        pressureValue[3] = self.max_pression
+                if e["key"] == Key.N:
+                    pressureValue[3] -= self.pas
+                    if pressureValue[3] < 0:
+                        pressureValue[3] = 0
+                        
+            print('         ****       ')
+            print('Control du mondule n° : ',self.flag+1)
+            for i in range(self.nb_cavity): # remise valeurs au bon endroit
+                self.pressure[index+i].value = [pressureValue[i]]
+                print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
+            print('         ****       ')
+
+class StiffController2(Sofa.Core.Controller): # va à termes remplacer le 1er
+
+    # def __init__(self,pas,max_pression,nb_module,nb_cavity,*args, **kwargs):
+    def __init__(self,pas,module,parent,*args, **kwargs):
+
+            Sofa.Core.Controller.__init__(self,args,kwargs)
+            # self.RootNode = args[0]
+            # self.RootNode = kwargs["RootNode"]
+            self.pressure, txt_chmbre = connect.CavityConnect2(node=parent,module=module)
+            self.flag = 0;
+            self.pas = pas
+            self.max_pression = module.max_pression
+            self.nb_module = module.nb_module
+            self.nb_cavity = module.nb_cavity
+            if module.dyn_flag == 1:
+                self.time_step = module.dt
+            else :
+                self.time_step = 1
 
     def onKeypressedEvent(self,e):
         
@@ -113,6 +196,92 @@ class StiffController(Sofa.Core.Controller):
                 print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
             print('         ****       ')
 
+
+class StiffController3(Sofa.Core.Controller): # va à termes remplacer le 1er
+
+    # def __init__(self,pas,max_pression,nb_module,nb_cavity,*args, **kwargs):
+    def __init__(self,pas,module,parent,node2,*args, **kwargs):
+
+            Sofa.Core.Controller.__init__(self,args,kwargs)
+            # self.RootNode = args[0]
+            # self.RootNode = kwargs["RootNode"]
+            self.pressure, txt_chmbre = connect.CavityConnect3(node=parent,node2 = node2,module=module)
+            self.flag = 0;
+            self.pas = pas
+            self.max_pression = module.max_pression
+            self.nb_module = module.nb_module
+            self.nb_cavity = module.nb_cavity
+            if module.dyn_flag == 1:
+                self.time_step = module.dt
+            else :
+                self.time_step = 1
+
+    def onKeypressedEvent(self,e):
+        
+            if e["key"] == Key.T: # switche d'un module à un autre pour l'actionnement
+                if self.flag < self.nb_module - 1:
+                    self.flag = self.flag + 1
+                    print('Switch au mondule n° : ',self.flag+1)
+                    # print(self.flag)
+                else:
+                    self.flag = 0
+                    print('Switch au mondule n° : ',self.flag+1)
+                    # print(self.flag)
+
+            pressureValue = numpy.zeros(self.nb_cavity)
+
+            index = self.flag*self.nb_cavity
+            for i in range(self.nb_cavity):
+                pressureValue[i] = self.pressure[index+i].value.value[0]
+
+            if e["key"] == Key.D:
+                pressureValue[0] += self.pas
+                # print('===========D')
+                if pressureValue[0] > self.max_pression:
+                    pressureValue[0]= self.max_pression
+            if e["key"] == Key.C:
+                pressureValue[0] -= self.pas
+                if pressureValue[0] < 0:
+                    pressureValue[0] = 0
+
+            if e["key"] == Key.F:
+                # print('===========F')
+                pressureValue[1] += self.pas
+                if pressureValue[1] > self.max_pression:
+                    pressureValue[1] = self.max_pression
+            if e["key"] == Key.V: # S déjà pris, je met F à la place
+                pressureValue[1] -= self.pas
+                if pressureValue[1] < 0:
+                    pressureValue[1] = 0
+
+            if e["key"] == Key.G:
+                # print('==========G')
+                pressureValue[2] += self.pas
+                if pressureValue[2] > self.max_pression:
+                    pressureValue[2] = self.max_pression
+            if e["key"] == Key.B:
+                pressureValue[2] -= self.pas
+                if pressureValue[2] < 0:
+                    pressureValue[2] = 0
+
+            if self.nb_cavity > 3:
+                if e["key"] == Key.H:
+                    # print('==========G')
+                    pressureValue[3] += self.pas
+                    if pressureValue[3] > self.max_pression:
+                        pressureValue[3] = self.max_pression
+                if e["key"] == Key.N:
+                    pressureValue[3] -= self.pas
+                    if pressureValue[3] < 0:
+                        pressureValue[3] = 0
+                        
+            print('         ****       ')
+            print('Control du mondule n° : ',self.flag+1)
+            for i in range(self.nb_cavity): # remise valeurs au bon endroit
+                self.pressure[index+i].value = [pressureValue[i]]
+                print('Pression chambre ',i,' : ',pressureValue[i]/self.time_step)
+            print('         ****       ')
+        
 ### - VIEWER - ###
 class PositionViewer(Sofa.Core.Controller):
     def __init__(self,nb_poutre,*args, **kwargs):

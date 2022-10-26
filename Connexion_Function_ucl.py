@@ -3,6 +3,13 @@ from datetime import datetime
 import csv
 import time
 
+        ## Pour sortir des datas de SOFA et les mettre dans un csv => en faire une fonction ???
+        # nf = getcwd() + '/record/' + 'points.csv' # '.csv' or '.txt' # pour record les trucs et faire des tests en python
+        # fichier = open(nf,'x')
+        # fichier.write("si tu veux on fait comme \n")
+        # fichier.write(str(copy(Boite_III_K.pointsInROI.value)))
+        # fichier.close() # 
+
 """ Fonction connection à la simulation """
 def CavityConnect(RootNode,module):
     stiffNode = RootNode.getChild('RigidFrames')
@@ -26,7 +33,7 @@ def CavityConnect(RootNode,module):
 
 def CavityConnect2(node,module): # Va à terme remplacer l'ancienne version
     stiffNode = node # argument : parent node of the cavity
-    position = stiffNode.getObject('DOFs')
+    # position = stiffNode.getObject('DOFs')
     ind = -1
     pressure = []
     txt_chmbre = ""
@@ -43,7 +50,36 @@ def CavityConnect2(node,module): # Va à terme remplacer l'ancienne version
     print('-------')
     print(' ')
     return pressure, txt_chmbre
-
+    
+def CavityConnect3(node,node2,module): # Va à terme remplacer l'ancienne version
+    print([node,node2,module])
+    stiffNode = node # argument : parent node of the cavity
+    # position = stiffNode.getObject('DOFs')
+    ind = -1
+    pressure = []
+    txt_chmbre = ""
+    print('-------')
+    print('Noeuds connectés au PressurePrinter : ') # ajouter SIMU pour qu'o sache dans quel contexte c'est connecté ?
+    for i in range(module.nb_module):
+        if i == 0 :
+            txt_chmbre = txt_chmbre + ' , [Pression module n' + str(i+1) + '] , [Volume module n' + str(i+1) + ']'
+            for j in range(module.nb_cavity):
+                ind = ind + 1
+                node_name = "Bellow" + str(j+1) + str(i+1)            
+                noeud = node2.getChild(node_name)
+                print(node_name)
+                pressure.append(noeud.getObject('SPC'))
+        else :
+            txt_chmbre = txt_chmbre + ' , [Pression module n' + str(i+1) + '] , [Volume module n' + str(i+1) + ']'
+            for j in range(module.nb_cavity):
+                ind = ind + 1
+                node_name = "Bellow" + str(j+1) + str(i+1)            
+                noeud = stiffNode.getChild(node_name)
+                print(node_name)
+                pressure.append(noeud.getObject('SPC'))
+    print('-------')
+    print(' ')
+    return pressure, txt_chmbre
 
 def OpenPrintFile(module,txt_chmbre,file_type,nom_fichier):
         path = getcwd()

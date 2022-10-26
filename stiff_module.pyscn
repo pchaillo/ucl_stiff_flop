@@ -1,0 +1,116 @@
+import Sofa
+# import SofaPython3
+from math import sin,cos, sqrt, acos
+import array
+
+from Stiff_Function import *
+from flopMultiController import *
+from stlib3.physics.mixedmaterial import Rigidify
+from stlib3.physics.deformable import ElasticMaterialObject
+#from tutorial import *
+
+############## PARAM7TRES A FIXER ####################
+
+# Paramètres controller
+pas = 20 # pour argument controller (attention aux unités !)
+max_pression = 150
+init_pressure_value = 0
+# value_type = "1" # pour commande en volume (avec beam6)
+value_type = "pressure" # pour commande en pression (avec beam5)
+
+# Paramètres ROBOT
+nb_module = 1 # nombre de modules
+# module
+masse_module = 0.01 # en kg, soit 10g
+h_module = 58 # hauteur du module en mm
+nb_cavity = 3  # nombre de paires de cavités
+# soft part
+YM_soft_part = 100 # young modulus of the soft part
+coef_poi = 0.1 # coefficient de poisson
+# stiff parts
+rigid_bool = 1 # 0 => pas de partie rigide
+YM_stiff_part = 1875 # young modulus of the stiff part
+rigid_base = 4 # hauteur de rigidification de la base des modules en mm
+rigid_top = 2 # hauteur de rigidification de l'extrémité des modules en mm
+# models
+# chamber_model =  'mesh/chambres_model.stl'
+# module_model = 'mesh/module_model.vtk'
+chamber_model =  'mesh/stiff_flop_58_chamber_normal.stl'
+module_model = 'mesh/stiff_flop_58.vtk'
+# chamber_model = 'mesh/stiff_flop_chmber_test_normal_3.stl'
+# module_model = 'mesh/STIFF_FLOP02_attach.vtk'
+
+# Paramètres Simulation
+name_module = 'Module'
+name_cavity = 'Bellow'
+nb_poutre = nb_module*4
+
+
+############## PARAM7TRES -- FIN ####################
+
+stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool)
+
+def MyScene(rootNode, YM):
+        # required plugins:
+    rootNode.addObject('RequiredPlugin', name='SoftRobots')
+    rootNode.addObject('RequiredPlugin', name='BeamAdapter')
+    rootNode.addObject('RequiredPlugin', name='SofaConstraint')
+    rootNode.addObject('RequiredPlugin', name='SofaDeformable')
+    rootNode.addObject('RequiredPlugin', name='SofaGeneralAnimationLoop')
+    rootNode.addObject('RequiredPlugin', name='SofaImplicitOdeSolver')
+    rootNode.addObject('RequiredPlugin', name='SofaLoader')
+    rootNode.addObject('RequiredPlugin', name='SofaMeshCollision')
+    rootNode.addObject('RequiredPlugin', name='SofaSimpleFem')
+    rootNode.addObject('RequiredPlugin', name='SofaSparseSolver')
+    rootNode.addObject('RequiredPlugin', name='SofaEngine')
+
+
+    #rootNode.addObject('RequiredPlugin', name='SofaPython')
+    # rootNode.findData('gravity').value=[0, 0, 9810];
+    rootNode.findData('gravity').value=[0, 0, 0];
+
+
+        #visual dispaly
+    rootNode.addObject('VisualStyle', displayFlags='showVisualModels showBehaviorModels showCollisionModels hideBoundingCollisionModels showForceFields showInteractionForceFields hideWireframe')
+    rootNode.addObject('BackgroundSetting', color='0 0.168627 0.211765')
+    #rootNode.createObject('OglSceneFrame', style="Arrows", alignment="TopRight")
+    
+    rootNode.findData('dt').value= 0.001;
+    
+    rootNode.addObject('FreeMotionAnimationLoop')
+    rootNode.addObject('DefaultVisualManagerLoop')   
+    # rootNode.createObject('QPInverseProblemSolver') #inverse
+    rootNode.addObject('GenericConstraintSolver', maxIterations='100', tolerance = '0.0000001')
+
+    rigidFramesNode  = rootNode.addChild('RigidFrames')
+    rigidFramesNode.addObject('EulerImplicitSolver', firstOrder='1', vdamping=0)
+    rigidFramesNode.addObject('SparseLDLSolver', name='ldlsolveur',template="CompressedRowSparseMatrixd")    
+    # rigidFramesNode.addObject('SofaDenseSolver', name='ldlsolveur')  # test  
+    rigidFramesNode.addObject('GenericConstraintCorrection')
+
+    rigidFramesNode.addObject('RegularGridTopology',  name='meshLinesCombined',  nx=nb_poutre, ny='1', nz='1', xmax=h_module*nb_module, xmin='0.0', ymin='0', ymax='0',zmin='0',zmax='0')
+    rigidFramesNode.addObject('MechanicalObject',  name='DOFs', template='Rigid3d', showObject='1', showObjectScale='1', rotation=[0, -90 ,0], translation = [0,0,0])
+    rigidFramesNode.addObject('BeamInterpolation', name='BeamInterpolation', printLog = '1', defaultYoungModulus=YM_soft_part, dofsAndBeamsAligned='true', straight='1', crossSectionShape='circular', radius=7)#, radius=5*radius)
+    # rigidFramesNode.addObject('AdaptiveBeamForceFieldAndMass', name='BeamForceField', computeMass='0', massDensity=0.001)
+    rigidFramesNode.addObject('RestShapeSpringsForceField', name='anchor', points='0', stiffness='1e12', angularStiffness='1e12')
+      
+
+    stiff_flop = stiff.createRobot(parent = rigidFramesNode, name = "MyStiffFlop")
+
+    rootNode.addObject(StiffController(pas,max_pression,nb_module,nb_cavity,rootNode))
+    rootNode.addObject(PositionViewer(nb_poutre,rootNode))
+    # rootNode.addObject(PositionPrinterTxt(stiff,rootNode))
+    # rootNode.addObject(PositionPrinterCsv(stiff,rootNode))
+
+    return rootNode
+
+def createScene(rootNode):
+    MyScene(rootNode,YM = 100)
+
+
+    
+    
+   
+
+    
+   

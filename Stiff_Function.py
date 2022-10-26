@@ -1,5 +1,7 @@
 import Sofa.Core
 
+import meshing_functions as mf
+
 # utilise Rigidify de STLIB
 #from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
@@ -13,55 +15,10 @@ from spicy import copy
 # def auto_stl_choice(h_module,stl_base): 
 #     return
 
-def new_index(self,points,axis): # axis (axe selon lequel on veut trier les points celon l'ordre croissant) = 0 => x //  axis = 1 => y  // axis = 2 => z 
-    # mesh = meshio.read(self.path_vtk) 
-    # points = mesh.points
-    # cell_data = mesh.cell_data
-    # cells = mesh.cells
-    # cell_01 = cells[0]
-    # cell_type = cell_01[0]
-    # cell_positions = cell_01[1]
-    # l = len(cell_positions)
-
-    ###### Pour trier les points et enregistrer les indices   ##### #001
-    li=[]
-    for i in range(len(points)):
-          li.append([points[i],i])
-          
-    new_points = sorted (points, key=lambda item: (item [axis]))
-    new_points2 = np.array(new_points)
-
-    li2 = sorted(li,key=lambda item: (item [0][axis]))
-
-    # sort_index = []
-    # sort_index2 = []
-
-    # ind = 0
-    # for x in li2:
-    #       sort_index.append(x[1]) # sort index good :) :) :) 
-    #       # sort_index2.append((x[1],ind)) # ind pas utile finalement
-    #       ind += 1
-    #  ################################################################### #001
-
-    return li2 # contain the points in the new order and the old associated index
-
-    #   # ##### Pour réassigner de la bonne façon les noeuds des quads #######" #003
-    # new_cells = []
-    # for i in range(l) :
-    #      quad = cell_positions[i]
-    #      new_quad = []
-    #      for j in range(4):
-    #         pt = quad[j]
-    #         value_inx = np.where( sort_index == pt )
-    #         value_idx = value_inx[0]
-    #         value_i = value_idx[0]
-    #         new_quad.append(value_i)
-    #      new_cells.append(new_quad)
-    # # ##################################################################### #003
-
-    # cell_for_record = [(cell_type, new_cells)]
-    # new_name = self.vtkPath + self.filename+ '_new_idx_on_' + str(axis) + '.vtk'
-    # meshio.write_points_cells(new_name,new_points2,cell_for_record)
+def object_list_init(object_list,node):
+    for i in object_list :
+        node_object = node.getObject(i)
+        node_object.init()
 
 def EffectorGoal(node, position,name,taille):
     goal = node.addChild(name)
@@ -127,7 +84,23 @@ class Stiff_Flop() :
 
     def createCavity(self,parent,name_c,i,cavity_model,act_flag): # for v1 -------
         bellowNode = parent.addChild(name_c+str(i+1))
-        bellowNode.addObject('MeshSTLLoader', filename=cavity_model, flipNormals='0', triangulate='true', name='meshLoader',rotation=[0,0,self.ang_dec*self.i_cavity], translation=[0, 0,self.h_module*i])#, rotation=[self.ang_dec*self.i_cavity,0,0] if pre-rotated 3D model
+        MeshLoad = bellowNode.addObject('MeshSTLLoader', filename=cavity_model, flipNormals='0', triangulate='true', name='meshLoader',rotation=[0,0,self.ang_dec*self.i_cavity], translation=[0, 0,self.h_module*i])#, rotation=[self.ang_dec*self.i_cavity,0,0] if pre-rotated 3D model
+        MeshLoad.init()
+        points  = MeshLoad.position.value
+        triangles = MeshLoad.triangles.value
+
+        # ## Pour remmettre les indices dans le bon ordre #009
+        # l = len(points)
+        # indices = [k for k in range(l)]
+        # [new_points, new_points_l] = mf.new_index(points = points, axis = 2,old_indices = indices) # axis = 0 => x //  axis = 1 => y  // axis = 2 => z 
+        # new_triangle = mf.reindex_mesh(new_points_list=new_points_l,mesh=triangles)
+        # ##  #009
+
+        [new_points, new_points_l,new_triangle] = mf.remesh(points = points,mesh = triangles,axis= 2 )
+
+        MeshLoad.position.value = new_points
+        MeshLoad.triangles.value = new_triangle
+
         # bellowNode.addObject('MeshSTLLoader', filename=cavity_model, flipNormals='0', triangulate='true', name='meshLoader',rotation=[0,self.ang_dec*self.i_cavity,0], translation=[0, 0,self.h_module*i])#, rotation=[self.ang_dec*self.i_cavity,0,0] if pre-rotated 3D model
         bellowNode.addObject('MeshTopology', src='@meshLoader', name='chambreAMesh'+str(i+1))
         bellowNode.addObject('MechanicalObject', name='chambreA'+str(i+1),rotation=[0, 90 , 0])#,translation = [0,0,h_module*i]) # 90 on y
@@ -141,6 +114,12 @@ class Stiff_Flop() :
         self.i_cavity = self.i_cavity + 1;
         if self.i_cavity == self.nb_cavity :
             self.i_cavity = 0
+
+        # circles = mf.circle_detection(points = new_points, pt_per_slice = 12) # pas 12 pt par étage à partir du stl classique => ne fonctionne pas
+        # print(circles)
+        
+        # bellowNode.addObject('StiffSpringForceField')
+
         return bellowNode
 
     def createModule(self,parent,name_c,i,model):
@@ -163,19 +142,58 @@ class Stiff_Flop() :
 
         #nb_slices = 16
 
-        module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
-        engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=self.nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
-        module.addObject('HexahedronSetTopologyContainer', position='@engine.extrudedVertices', hexas='@engine.extrudedHexas')
-        module.addObject('HexahedronSetTopologyModifier')
+        object_list = ['topo' ,'engine', 'container','modifier','tetras'] # to try do init of objects in SOFA
+        module.addObject('MeshOBJLoader', name=object_list[0] , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
+        engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name=object_list[1], template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=self.nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
+        
+        engine.init() #auncun effet ? Du à la 2nd initialisation des points ? 'pas effectif sur les cavités ?)' #003
+        hexas = engine.extrudedHexas.value
+        points = engine.extrudedVertices.value 
+        [new_points, new_points_l,new_hexas] = mf.remesh(points = points,mesh = hexas,axis= 1 ) 
+        # print("TEST")
+        # print(new_points)
+        engine.extrudedHexas.value = new_hexas
+        engine.extrudedVertices.value = new_points # 003
+
+        module.addObject('HexahedronSetTopologyContainer', position='@engine.extrudedVertices', hexas='@engine.extrudedHexas', name = object_list[2])
+        module.addObject('HexahedronSetTopologyModifier', name = object_list[3])
         # finger.createObject('HexahedronSetTopologyAlgorithms')
         # finger.createObject('HexahedronSetGeometryAlgorithms')
-        module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5", ry="0", rz="0")#, dx="55", dy="50", dz="-25", )
+        module.addObject('MechanicalObject',name=object_list[4], template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5", ry="0", rz="0")#, dx="55", dy="50", dz="-25", )
         # module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5",dz = h_seal)#,translation = [0,0,h_seal*10])#, ry="0", rz="-90", dx="55", dy="50", dz="-25", )
         module.addObject('UniformMass', totalMass='0.05')
         # module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
+        
+
+        # module.addObject('MeshOBJLoader', name="topo" , filename=model,translation = [self.h_module*i,0,0],rotation=[0, 0 , 90])
+        # engine = module.addObject('ExtrudeQuadsAndGenerateHexas', name='engine', template='Vec3d', thicknessIn='0.0', thicknessOut=-self.h_module, numberOfSlices=self.nb_slices, surfaceVertices='@topo.position', surfaceQuads='@topo.quads' )
+        # module.addObject('HexahedronSetTopologyContainer', position='@engine.extrudedVertices', hexas='@engine.extrudedHexas' )
+        # module.addObject('HexahedronSetTopologyModifier')
+        # # finger.createObject('HexahedronSetTopologyAlgorithms')
+        # # finger.createObject('HexahedronSetGeometryAlgorithms')
+        # module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5", ry="0", rz="0")#, dx="55", dy="50", dz="-25", )
+        # # module.addObject('MechanicalObject',name="tetras", template="Vec3d", position='@container.position', showIndices="false", showIndicesScale="4e-5",dz = h_seal)#,translation = [0,0,h_seal*10])#, ry="0", rz="-90", dx="55", dy="50", dz="-25", )
+        # module.addObject('UniformMass', totalMass='0.05')
+        # # module.addObject('HexahedronFEMForceField' , template='Vec3d', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_soft_part)
+
         return module
 
-    def createCavityFromFEM(self,parent,module,i):
+    def OneCavitFEM(self,points,quads,indices,axis = 0):
+        [new_points, old_ind_eq_tab,new_quads] = mf.remesh(points = points,mesh = quads,axis= 0 ,old_indices=indices)
+        triangles = mf.quad_2_triangles(quads=new_quads)
+
+        [circles, ind_tab] = mf.circle_detection(points = new_points, pt_per_slice = 12)
+        # closing_tri = mf.close_cavity(circles,ind_tab) # ind not good for triangle
+        [new_circle_tab,new_ind_tab_full] = mf.ordering_cylinder(circles,ind_tab)
+        l = len(new_ind_tab_full)
+        closing_tri = mf.close_cavity_2(ind_bottom = new_ind_tab_full[0],ind_top = new_ind_tab_full[l-1])
+        # print(circles)
+
+        triangles = triangles + closing_tri
+
+        return [new_points, triangles,old_ind_eq_tab]
+
+    def createCavityFromFEM(self,parent,module,i,act_flag):
         # for j in range(self.nb_cavity): pour la prochaine version plus universelle
 
         # bellowNode = parent.addChild(name_c+str(i+1)) # Cavities node
@@ -251,29 +269,122 @@ class Stiff_Flop() :
 
         # boxNodes = module.addChild("BoxNodes") # ok ça ne marche pas du tout
 
-        module.addObject('BoxROI',name="DISPLAY_boxROI_III_K"+str(i+1) , template="Vec3d" ,orientedBox= [III_K_x, III_K_y, 0 ,III_K_x2, III_K_y2, 0 ,III_K_x3, III_K_y3,0 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="DISPLAY_boxROI_III_H"+str(i+1) , template="Vec3d" ,orientedBox= [DA3x-0.6, DA3y-0.6, 0 ,E3x+1.5 ,E3y+0.5 ,0,Ex+1.5, Ey+0.5, 0,self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="DISPLAY_boxROI_II_K"+str(i+1) , template="Vec3d" ,orientedBox= [II_K_x, II_K_y, 0 ,II_K_x2,II_K_y2 , 0 ,II_K_x3 ,II_K_y3,0 , self.h_module*2] ,drawBoxes="1",strict=True )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="DISPLAY_boxROI_II_H"+str(i+1) , template="Vec3d" ,orientedBox= [II_H_x, II_H_y, 0 ,II_H_x2,II_H_y2 , 0 ,II_H_x3 ,II_H_y3,0 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="DISPLAY_boxROI_I_K"+str(i+1) , template="Vec3d" ,orientedBox= [I_K_x, I_K_y, 0 ,I_K_x2,I_K_y2 , 0 ,I_K_x3 ,I_K_y3,0 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="DISPLAY_boxROI_I_H"+str(i+1) , template="Vec3d" ,orientedBox= [I_H_x, I_H_y, 0 ,I_H_x2,I_H_y2 , 0 ,I_H_x3 ,I_H_y3,0 , self.h_module*2] ,drawBoxes="1" )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        ## Pour voir ou sont les box sur le FEM
+        display_flag = 0
+        module.addObject('BoxROI',name="DISPLAY_boxROI_III_K"+str(i+1) , template="Vec3d" ,orientedBox= [III_K_x, III_K_y, self.h_module*i ,III_K_x2, III_K_y2, self.h_module*i ,III_K_x3, III_K_y3,self.h_module*i , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="DISPLAY_boxROI_III_H"+str(i+1) , template="Vec3d" ,orientedBox= [DA3x-0.6, DA3y-0.6, self.h_module*i ,E3x+1.5 ,E3y+0.5 ,0,Ex+1.5, Ey+0.5, self.h_module*i,self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="DISPLAY_boxROI_II_K"+str(i+1) , template="Vec3d" ,orientedBox= [II_K_x, II_K_y, self.h_module*i ,II_K_x2,II_K_y2 , self.h_module*i ,II_K_x3 ,II_K_y3,self.h_module*i , self.h_module*2] ,drawBoxes=display_flag,strict=True )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="DISPLAY_boxROI_II_H"+str(i+1) , template="Vec3d" ,orientedBox= [II_H_x, II_H_y, self.h_module*i ,II_H_x2,II_H_y2 , self.h_module*i ,II_H_x3 ,II_H_y3,self.h_module*i , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="DISPLAY_boxROI_I_K"+str(i+1) , template="Vec3d" ,orientedBox= [I_K_x, I_K_y, self.h_module*i ,I_K_x2,I_K_y2 , self.h_module*i ,I_K_x3 ,I_K_y3,self.h_module*i , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="DISPLAY_boxROI_I_H"+str(i+1) , template="Vec3d" ,orientedBox= [I_H_x, I_H_y, self.h_module*i ,I_H_x2,I_H_y2 , self.h_module*i ,I_H_x3 ,I_H_y3,self.h_module*i , self.h_module*2] ,drawBoxes=display_flag )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
 
-        module.addObject('BoxROI',name="boxROI_III_K"+str(i+1) , template="Vec3d" ,orientedBox= [0, III_K_y , III_K_x ,0,III_K_y2, III_K_x2 ,0 ,III_K_y3,III_K_x3 , self.h_module*2] ,drawBoxes="1" ,strict=True,drawQuads = True )#,doUpdate = False)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="boxROI_III_H"+str(i+1) , template="Vec3d" ,orientedBox= [0, DA3y-0.6, DA3x-0.6 ,0 ,E3y+0.5 ,E3x+1.5,0, Ey+0.5, Ex+1.5,self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="boxROI_II_K"+str(i+1) , template="Vec3d" ,orientedBox= [0, II_K_y, II_K_x ,0,II_K_y2 , II_K_x2 , 0,II_K_y3,II_K_x3 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="boxROI_II_H"+str(i+1) , template="Vec3d" ,orientedBox= [0, II_H_y, II_H_x ,0,II_H_y2 , II_H_x2 ,0 ,II_H_y3,II_H_x3 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="boxROI_I_K"+str(i+1) , template="Vec3d" ,orientedBox= [0, I_K_y, I_K_x ,0,I_K_y2 , I_K_x2 ,0 ,I_K_y3,I_K_x3 , self.h_module*2] ,drawBoxes="1",strict=True )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
-        module.addObject('BoxROI',name="boxROI_I_H"+str(i+1) , template="Vec3d" ,orientedBox= [0, I_H_y, I_H_x ,0,I_H_y2 , I_H_x2 ,0 ,I_H_y3,I_H_x3 , self.h_module*2] ,drawBoxes="1" ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_III_K"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, III_K_y , III_K_x ,self.h_module*i,III_K_y2, III_K_x2 ,self.h_module*i ,III_K_y3,III_K_x3 , self.h_module*2] ,drawBoxes=display_flag ,strict=True,drawQuads = True )#,doUpdate = False)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_III_H"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, DA3y-0.6, DA3x-0.6 ,self.h_module*i ,E3y+0.5 ,E3x+1.5,self.h_module*i, Ey+0.5, Ex+1.5,self.h_module*2] ,drawBoxes=display_flag,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_II_K"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, II_K_y, II_K_x ,self.h_module*i,II_K_y2 , II_K_x2 , self.h_module*i,II_K_y3,II_K_x3 , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_II_H"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, II_H_y, II_H_x ,self.h_module*i,II_H_y2 , II_H_x2 ,self.h_module*i ,II_H_y3,II_H_x3 , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_I_K"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, I_K_y, I_K_x ,self.h_module*i,I_K_y2 , I_K_x2 ,self.h_module*i ,I_K_y3,I_K_x3 , self.h_module*2] ,drawBoxes=display_flag ,strict=True )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
+        module.addObject('BoxROI',name="boxROI_I_H"+str(i+1) , template="Vec3d" ,orientedBox= [self.h_module*i, I_H_y, I_H_x ,self.h_module*i,I_H_y2 , I_H_x2 ,self.h_module*i ,I_H_y3,I_H_x3 , self.h_module*2] ,drawBoxes=display_flag ,strict=True)#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
 
-        Boite_III_K = module.getObject('boxROI_III_K1')
-        print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
-        print(copy(Boite_III_K.pointsInROI.value))
-        print(copy(Boite_III_K.quadInROI.value))
-        print(copy(Boite_III_K.quadIndices.value))
-        print(copy(Boite_III_K.edgesInROI.value))
-        print(copy(Boite_III_K.nbIndices.value))
+        
+        object_list = ['topo' ,'engine', 'container','modifier','tetras'] # A FAIRE DE MANI7RE PROPRE !!!!
+        object_list_init(object_list=object_list,node=module)
 
-        print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
+        object_list2 = ['boxROI_III_K'+str(i+1) ,'boxROI_III_H'+str(i+1), 'boxROI_II_K'+str(i+1),'boxROI_II_H'+str(i+1),'boxROI_I_K'+str(i+1),'boxROI_I_H'+str(i+1)] 
+        object_list_init(object_list=object_list2,node=module)
+        # loader = module.getObject("topo")
+        # loader.init()
+
+        for j in range(self.nb_cavity):
+            name_base = "boxROI_" + "I"*(j+1) 
+
+            Boite_K = module.getObject(name_base + "_K" + str(i+1))
+            Boite_H = module.getObject(name_base + "_H" + str(i+1))
+
+            # print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
+            # print(copy(Boite_III_K.pointsInROI.value))
+            # print(copy(Boite_III_K.indices.value))
+            # print(copy(Boite_III_K.quadInROI.value))
+            # print(copy(Boite_III_K.quadIndices.value))
+            # # print(copy(Boite_III_K.edgesInROI.value))
+            # print(copy(Boite_III_K.nbIndices.value))
+            # print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
+             
+            # ## Remeshing part
+            quads = copy(Boite_K.quadInROI.value)
+            points = copy(Boite_K.pointsInROI.value)
+            indices = copy(Boite_K.indices.value)
+
+            # triangles_A = self.OneCavitFEM()
+
+            [new_points_K, triangles_K,old_ind_eq_tab_K] = self.OneCavitFEM(points=copy(Boite_K.pointsInROI.value),quads=Boite_K.quadInROI.value,indices=Boite_K.indices.value)
+            [new_points_H, triangles_H,old_ind_eq_tab_H] = self.OneCavitFEM(points=copy(Boite_H.pointsInROI.value),quads=Boite_H.quadInROI.value,indices=Boite_H.indices.value)
+            
+            print("PPPPPPPPPPPPPPPPPPP9999999999999999999999999999")
+            # print(triangles)
+            print(old_ind_eq_tab_K)
+            print(old_ind_eq_tab_H)
+
+            nb_tri = len(new_points_K) # - 1 ?
+            print(nb_tri)
+
+            print(triangles_K)
+            print(triangles_H)
+
+            for d in range(len(triangles_H)):
+                triangles_H[d] = [ triangles_H[d][0] + nb_tri, triangles_H[d][1] + nb_tri, triangles_H[d][2] + nb_tri  ]
+
+            print(triangles_H)
+
+            triangles = [*triangles_K, *triangles_H]
+            new_points = [*new_points_K, *new_points_H]
+
+            print(len(new_points))
+
+            [new_points2, old_ind_eq_tab_tot, triangles] = mf.remesh(points = new_points,mesh = triangles,axis= 2 )
+
+            # print("PPPPPPPPPPPPPPPPPPP")
+            # # print(triangles)
+            # print(len(new_points))
+            # print(len(new_points_K))
+
+            # triangles = triangles_K.extend(triangles_H)
+            # new_points = new_points_K + new_points_H
+
+            # act_flag = 1
+
+            triangles = mf.invers_normal(triangles)
+
+            Cavity = module.addChild("Bellow"+ str(j+1)+ str(i+1))
+            # Cavity.addObject("PointSetTopologyContainer", points = "@../Boite_III_K1.pointsInROI" )
+            # Cavity.addObject("PointSetTopologyContainer", points = Boite_III_K.pointsInROI.value )
+            # Cavity.addObject("QuadSetTopologyContainer", position =Boite_III_K.pointsInROI.value, points = Boite_III_K.indices.value,quad = copy(Boite_III_K.quadInROI.value))# quad = copy(Boite_III_K.quadIndices.value) )
+            Cavity.addObject("TriangleSetTopologyContainer", triangles = triangles,name="meshLoader",points = new_points2)#, position =Boite_III_K.pointsInROI.value, points = Boite_III_K.indices.value, quad = Boite_III_K.quadIndices.value )
+
+            # Cavity.addObject('MeshTopology', src='@meshLoader', name='chambreAMesh'+str(i+1))
+            Cavity.addObject('MechanicalObject', name='chambreA'+str(i+1),rotation=[0, 0 , 0])#,translation = [0,0,h_module*i]) # 90 on y
+            Cavity.addObject('TriangleCollisionModel', moving='0', simulated='1')
+            if act_flag == 0 :
+                Cavity.addObject('SurfacePressureActuator', name='SPC', template = 'Vec3d',triangles='@chambreAMesh'+str(i+1)+'.triangles',minPressure = self.min_pression,maxPressure = self.max_pression)#,maxPressureVariation = 20)#,valueType=self.value_type)
+            elif  act_flag == 1 :
+                Cavity.addObject('SurfacePressureConstraint', name='SPC', triangles='@chambreAMesh'+str(i+1)+'.triangles', value=self.init_pressure_value,minPressure = self.min_pression,maxPressure = self.max_pression, valueType=self.value_type)#,maxPressureVariation = 20)#,
+            # bellowNode.addObject('SurfacePressureModel', name='SPC_model', minPressure = 0,maxPressure = 20)
+            # bellowNode.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./chambreA'+str(i+1) )
+            self.i_cavity = self.i_cavity + 1;
+            if self.i_cavity == self.nb_cavity :
+                self.i_cavity = 0
+
+            Cavity.addObject('AdaptiveBeamMapping', interpolation='@../../BeamInterpolation', input='@../../DOFs', output='@./chambreA'+str(i+1) )
+
+        # Cavity.addObject("QuadSetTopologyContainer", quad = "@../Boite_III_K.quadInROI" )
+
+        # # to print what we get
+        # print("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU \n \n \n")
+        # print(copy(Boite_III_K.pointsInROI.value))
+        # print(copy(Boite_III_K.quadInROI.value))
+        # print(copy(Boite_III_K.quadIndices.value))
+        # print(copy(Boite_III_K.edgesInROI.value))
+        # print(copy(Boite_III_K.nbIndices.value))
+        # print("\n \n \n UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU")
 
        # #bOX GOOD, but I need 1 box per cavity :'('
        #  module.addObject('BoxROI',name="DISPLAY_boxROI_I_"+str(i+1) , template="Vec3d" ,orientedBox= [Dx, Dy, 0 ,D1x, D1y, 0 ,F1x ,F1y ,0 , self.h_module*2] ,drawBoxes="1" )#orientedBox="   8 3 0 9 5.5 0 8 6 0 1" , box="3 3 0 6 6 1", #position="@mecaObj.position" drawTriangles="1" triangles="@Container.triangles" name="boxROI" />
@@ -326,7 +437,7 @@ class Stiff_Flop() :
 
             module.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./tetras')# , useCurvAbs = False ) fait planter
 
-            # self.createCavityFromFEM(parent = parent, module =  module ,i = i)
+            self.createCavityFromFEM(parent = parent, module =  module ,i = i,act_flag=act_flag)
 
             if self.rigid_bool == 1 :
                 ## choisir strict a False ou True = > pour ne prendre que les tetras qui sont entièrement dans la boite 
@@ -345,10 +456,10 @@ class Stiff_Flop() :
                     modelSubTopo.addObject('HexahedronSetTopologyContainer', position='@loader.position', tetrahedra='@boxROI_top'+str(i+1)+'.tetrahedraInROI', name='container')
                     modelSubTopo.addObject('HexahedronFEMForceField', template='Vec3', name='FEM', method='large', poissonRatio=self.coef_poi,  youngModulus=self.YM_stiff_part)
 
-            for j in range(self.nb_cavity):
-                name = 'Bellow' + str(j+1)
-                bellowNode1 = self.createCavity(parent,name,i,chamber_model_path,act_flag)
-                bellowNode1.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./chambreA'+str(i+1) )
+            # for j in range(self.nb_cavity):
+            #     name = 'Bellow' + str(j+1)
+            #     bellowNode1 = self.createCavity(parent,name,i,chamber_model_path,act_flag)
+            #     bellowNode1.addObject('AdaptiveBeamMapping', interpolation='@../BeamInterpolation', input='@../DOFs', output='@./chambreA'+str(i+1) )
 
         return module
 

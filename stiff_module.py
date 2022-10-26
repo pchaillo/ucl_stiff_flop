@@ -34,9 +34,9 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 0 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
+act_flag = 1 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
-record = 1 # 0 => no record // 1 => record
+record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
 force_field = 1 # 0 => Tetrahedron FEM force fiels // 1 => Hexahedron FEM force field (Be crafull => you have to be coherent with the mesh files)
 auto_stl = 1 # 0 = > no automatic stl completion for chamber // 1 => with automatic settings
@@ -136,7 +136,7 @@ elif version == 4 : # V4 module
 name_module = 'Module' # pas utilisé il me semble
 name_cavity = 'Bellow'
 #nb_poutre = nb_module*17 # (best 7 beam with 20 slices)
-nb_slices = 9
+nb_slices = 16
 nb_poutre_per_module = nb_slices 
 # nb_poutre_per_module = 11 
 nb_poutre = nb_module*nb_poutre_per_module + 1
@@ -223,6 +223,9 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     stiff_flop = stiff.createRobot(parent = rigidFramesNode, name = "MyStiffFlop",out_flag = out_flag, act_flag = act_flag)
 
+    if nb_module == 2 :
+        stiff_2 = rigidFramesNode.getChild('stiff_flop1')
+
     MeasuredPosition = EffectorGoal(node=rootNode, position = [0,0,0],name = 'MeasuredPosition',taille = 4)
     DesiredPosition = EffectorGoal(node=rootNode, position = [0,0,h_effector],name = 'DesiredPosition',taille = 0.5)
     if nb_module == 2 :
@@ -294,18 +297,19 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     else : # controller runSofa
         if record == 1:
-            rootNode.addObject(ParameterPrinterCsv(module =stiff,nom_dossier = nom_dossier,RootNode=rootNode,K_I = K_I, K_P = K_P,dt=dt))
-            rootNode.addObject(PositionPrinterCsv(child_name = 'RigidFrames',name = 'DOFs',module =stiff,nom_dossier = nom_dossier,beam_ind = nb_poutre-1,RootNode=rootNode))
-            rootNode.addObject(PositionPrinterCsv(child_name = 'goal',name = 'goalM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
-            rootNode.addObject(PressurePrinterCsv(module =stiff,nom_dossier = nom_dossier,RootNode=rootNode,act_flag=act_flag))
-            rootNode.addObject(PositionPrinterCsv(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
-            if close_loop == 1 :
-                rootNode.addObject(PositionPrinterCsv(child_name = 'DesiredPosition',name = 'DesiredPositionM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
-            else :
-                rootNode.addObject(PositionPrinterCsv(child_name = 'goal2',name = 'goal2M0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
-            if nb_module == 2 :
-                rootNode.addObject(PositionPrinterCsv(child_name = 'MeasuredPosition_2',name = 'MeasuredPosition_2M0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
-                rootNode.addObject(PositionPrinterCsv(child_name = 'RigidFrames',name = 'DOFs',module =stiff,nom_dossier = nom_dossier,beam_ind = (nb_poutre/2)-1,RootNode=rootNode))
+            if act_flag == 0 : # On peut par la suite ajouter un else pour enregistrer aussi des information en commande directe si nécessaire
+                rootNode.addObject(ParameterPrinterCsv(module =stiff,nom_dossier = nom_dossier,RootNode=rootNode,K_I = K_I, K_P = K_P,dt=dt))
+                rootNode.addObject(PositionPrinterCsv(child_name = 'RigidFrames',name = 'DOFs',module =stiff,nom_dossier = nom_dossier,beam_ind = nb_poutre-1,RootNode=rootNode))
+                rootNode.addObject(PositionPrinterCsv(child_name = 'goal',name = 'goalM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
+                rootNode.addObject(PressurePrinterCsv(module =stiff,nom_dossier = nom_dossier,RootNode=rootNode,act_flag=act_flag))
+                rootNode.addObject(PositionPrinterCsv(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
+                if close_loop == 1 :
+                    rootNode.addObject(PositionPrinterCsv(child_name = 'DesiredPosition',name = 'DesiredPositionM0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
+                else :
+                    rootNode.addObject(PositionPrinterCsv(child_name = 'goal2',name = 'goal2M0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
+                if nb_module == 2 :
+                    rootNode.addObject(PositionPrinterCsv(child_name = 'MeasuredPosition_2',name = 'MeasuredPosition_2M0',module =stiff,nom_dossier = nom_dossier,RootNode=rootNode))
+                    rootNode.addObject(PositionPrinterCsv(child_name = 'RigidFrames',name = 'DOFs',module =stiff,nom_dossier = nom_dossier,beam_ind = (nb_poutre/2)-1,RootNode=rootNode))
 
 
 
@@ -339,7 +343,7 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 # rootNode.addObject(PrintGoalPos(name="CloseLoopController",RootNode=rootNode))
                 rootNode.addObject(PointPerPointTrajectory(node = DesiredPosition,name = 'DesiredPositionM0',module = stiff,point_tab = point_tab, node_pos = MeasuredPosition, name_pos = 'MeasuredPositionM0',err_d = 50,shift=0,beam_flag = 0))   
             else : # open loop ( close_loop == 0 )     
-                rootNode.addObject(PressurePrinter_local(module = stiff,node = rigidFramesNode))
+                # rootNode.addObject(PressurePrinter_local(module = stiff,node = rigidFramesNode))
         
                 #rootNode.addObject(LineTrajectory(nb_iter=20,node = goal2,name = 'goal2M0',p_begin = [0, 0 , 55], p_end = [10, -10 , 55]))
 
@@ -356,7 +360,10 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
                 #rootNode.addObject(GoalKeyboardController(goal_pas = goal_pas,node = goal2,name = 'goal2M0')) # for goal with shift
                 rootNode.addObject(GoalShift(node_follow= goal ,object_follow = 'goalM0',node_master = goal2,object_master = 'goal2M0',shift_tab = [0,0,0]))
         elif act_flag == 1 :
-            rootNode.addObject(StiffController(pas=pas,module = stiff,RootNode = rootNode))
+            if nb_module == 1 :
+                rootNode.addObject(StiffController2(pas=pas,module = stiff,parent = stiff_flop))
+            elif nb_module == 2 :
+                rootNode.addObject(StiffController3(pas=pas,module = stiff,parent = stiff_flop,node2 = stiff_2))
             #rootNode.addObject(AuroraTracking(child_name = 'MeasuredPosition',name = 'MeasuredPositionM0',module =stiff,RootNode=rootNode))
 
 
