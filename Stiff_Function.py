@@ -6,7 +6,7 @@ import meshing_functions as mf
 #from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
 from math import sin,cos, sqrt, acos, radians
-from spicy import copy
+from spicy import *
 
 # permet d'initialiser un robot au nb de module voulu :
 # - mettre tous les paramètres dans l'initialisation de la variable

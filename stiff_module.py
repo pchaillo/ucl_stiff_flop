@@ -48,9 +48,9 @@ if close_loop == 0 :
     K_I = 0
     shift = 0 #5 # shift in mm between the goal and the goal2 (for grabbing) points
 else :    
-    K_P = 0.001 #0.1
+    K_P = 0.001 #0.0012 for one module
     # K_I = 0.0001
-    K_I = 0.02
+    K_I = 0.02 # 0.035 for one module
 
 dt = 0.1
 
@@ -96,7 +96,7 @@ if version == 1 : # V1
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 2 : # V2 module
-    h_module = 50 # hauteur du module en mm
+    h_module = 55 # hauteur du module en mm
     if auto_stl == 0:
         # chamber_model =  'chambres_55_4it.stl'  # 55 mm
         chamber_model =  'model_chambres_v2_reg.stl' ### 
@@ -111,7 +111,7 @@ elif version == 2 : # V2 module
     module_model = 'stiff_flop_indicesOK_flip.obj'
     # module_model = 'model_module_v2_90.vtk' # h_module = 50 du coup
     radius = 5.75 
-    YM_soft = 90# 22.5 # young modulus of the soft part (kPa)
+    YM_soft = 83# 22.5 # young modulus of the soft part (kPa)
     nb_cavity = 3  # nombre de cavités (ou paires de cavités)
 
 elif version == 3 : # V3 module
@@ -147,10 +147,10 @@ goal_pas = 5 # step in mm for displacement of goal point with the keyboard
 ## Trajectory parameters ## 
 # CIRCLE
 circle_radius = 20
-nb_iter_circle = 600 # 600 eq to 1min/tour approximately
+nb_iter_circle = 500 # 600 eq to 1min/tour approximately
 circle_height = h_effector
 # SQUARE
-nb_iter_square = 200# 600 eq 10min/tour /// 
+nb_iter_square = 150# 600 eq 10min/tour /// 
 square_height = circle_height
 square_radius = 15
 # POINT PER POINT TRAJECTORY
