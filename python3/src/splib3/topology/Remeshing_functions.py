@@ -10,7 +10,7 @@ Created on Fri Oct 21 16:57:00 2022
 import csv
 import numpy as np
 
-def new_index(points,axis,old_indices): # 
+def index_from_axis(points,axis,old_indices): # 
     """
     Fonction pour réindexer (réordonner) des points celon un axe. Les points seront triés dans l'ordre croissant selon cet axe.
 
@@ -20,32 +20,32 @@ def new_index(points,axis,old_indices): #
     - old indices : tableau des indices des points passés en argument
 
     OUTPUT :
-    - new_points2 : tableau des points dans le nouvel ordre
-    - li2 : tableau qui contient : Les points dans le nouvel ordre, la position dans le tableau de points et l'indice associé du tableau old_indices
+    - new_points : tableau des points dans le nouvel ordre
+    - conv_tab_final : tableau qui contient : [new_points, old_indices] Les points dans le nouvel ordre, la position dans le tableau de points et l'indice associé du tableau old_indices
     (Remplacer par )
     """
     ###### Pour trier les points et enregistrer les indices   ##### #001
-    li=[]
+    conv_tab=[]
     
     if len(points) != len(old_indices):
         print("Attention, le  nombre de points et le nombre d'indices est différent => les données ne sont pas valides")
     
     for i in range(len(points)):
-          li.append([points[i],i,old_indices[i]])
+          conv_tab.append([points[i],old_indices[i]])
           
     new_points = sorted (points, key=lambda item: (item [axis]))
-    new_points2 = np.array(new_points)
+    # new_points_final = np.array(new_points) # Conversion de liste à tableau => vraiment utile ?
 
-    li2 = sorted(li,key=lambda item: (item [0][axis]))
+    conv_tab_final = sorted(conv_tab,key=lambda item: (item [0][axis]))
 
-    return [new_points2, li2] # contain the points in the new order and the old associated index
+    return [new_points, conv_tab_final] # contain the points in the new order and the old associated index
 
-def reindex_mesh(new_points_list,mesh):
+def reindex_mesh(conv_tab,mesh):
     """
     Pour changer les indices d'un mesh, en remplacant par les indices du nouveau tableau trié
 
     INPUT :
-    - new_points_list : tableau des points avec les positions et les indices (format li2 de la fonction précédente)
+    - conv_tab : tableau des points avec les positions et les indices (format [new_points, old_indices] de la fonction précédente)
     - mesh : maillage dont on veut changer les indices
 
     OUTPUT :
@@ -54,8 +54,8 @@ def reindex_mesh(new_points_list,mesh):
      # ##### Pour réassigner de la bonne façon les noeuds des quads #######" #003
     sort_index = []
     ind = 0
-    for x in new_points_list:
-         sort_index.append(x[2]) # sort index good :) :) :) 
+    for x in conv_tab:
+         sort_index.append(x[1]) # sort index good :) :) :) 
          # sort_index2.append((x[1],ind)) # ind pas utile finalement
          ind += 1
           
@@ -76,6 +76,7 @@ def reindex_mesh(new_points_list,mesh):
              value_i = value_idx[0]
              new_element.append(value_i)
          new_mesh.append(new_element)
+
     return new_mesh
 
 
@@ -116,7 +117,7 @@ def circle_detection(points, pt_per_slice,indices="null"):
         
     return [tab, ind_tab]
 
-def remesh(points,mesh,axis,old_indices = "null"):
+def remesh_from_axis(points,mesh,axis,old_indices = "null"):
     """
     Fonction pour remesher un maillage : 
     1 - Remettre la liste des points dansn un nouvel ordre ( fonction new_index() )
@@ -126,24 +127,20 @@ def remesh(points,mesh,axis,old_indices = "null"):
     INPUT : 
     points = liste de points à réordonner
     mesh = maillage a remesher
-    axis = axe selon lequel on veut réordonner les points
+    axis = axe selon lequel on veut réordonner les points [ 0 -> x / 1 -> y / 2 -> z ]
     old_indices = donne les anciens indices aux cas ou ils auraient déjà été modifiés
 
     OUTPUT : 
     new_points = liste de points dans le nouvel ordre (celui de l'axe axis)
-    old_ind_eq_tab = tableau d'équivalence entre les nouveaux et les anciens points
+    conv_tab = tableau d'équivalence entre les nouveaux et les anciens points
     new_mesh = nouveau maillage avec les nouveaux indices réorodnnés
     """
     if old_indices == "null" :
-        print("\n \n \n \n ON Y VA PAS NORMALEMENT \n \n \n \n")
         l = len(points)
         old_indices = [k for k in range(l)]
-    [new_points, new_points_l] = new_index(points = points, axis = axis,old_indices = old_indices)
-    new_mesh = reindex_mesh(new_points_list=new_points_l,mesh=mesh)
-    old_ind_eq_tab = []
-    for w in range(len(new_points_l)):
-        old_ind_eq_tab.append([ new_points_l[w][1],new_points_l[w][2],w ])
-    return [new_points, old_ind_eq_tab ,new_mesh]
+    [new_points, conv_tab] = index_from_axis(points = points, axis = axis,old_indices = old_indices)
+    new_mesh = reindex_mesh(conv_tab=conv_tab,mesh=mesh)
+    return [new_points, conv_tab ,new_mesh]
 
 def close_cavity(circles,ind_tab): # dirty => you may do better my boy
     """
