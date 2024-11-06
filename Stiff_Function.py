@@ -10,7 +10,7 @@ import Sofa.Core
 
 import meshing_functions as mf
 import ExternalModules as em
-from splib3.topology import Remeshing_functions as rf
+from splib3.topology import remeshing as rf
 
 # utilise Rigidify de STLIB
 #from stlib3.physics.mixedmaterial import Rigidify
@@ -387,7 +387,7 @@ class Stiff_Flop() :
 
         for i in range(self.nb_module):
 
-            parent.addObject('MechanicalMatrixMapper',template='Rigid3d,Rigid3d', object1='@DOFs', object2='@DOFs', nodeToParse='@./stiff_flop'+str(i+1))  # je ne projete que dans la structure globale => mechanical object
+            # parent.addObject('MechanicalMatrixMapper',template='Rigid3d,Rigid3d', object1='@DOFs', object2='@DOFs', nodeToParse='@./stiff_flop'+str(i+1))  # je ne projete que dans la structure globale => mechanical object
             
             module_model_path = define_mesh_path(self.module_model,out_flag)
             chamber_model_path = define_mesh_path(self.chamber_model,out_flag)

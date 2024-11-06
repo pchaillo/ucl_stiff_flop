@@ -13,7 +13,7 @@ import serial
 import math
 import numpy
 import six
-from sksurgerynditracker.nditracker import NDITracker # for Aurora tracking
+# from sksurgerynditracker.nditracker import NDITracker # for Aurora tracking
 
 # réunit toutes les fonctions python, permettant de :
 # - controller les pressions appliqués sur le robot

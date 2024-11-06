@@ -21,7 +21,7 @@ from math import sin,cos, sqrt, acos, radians, dist
 from spicy import copy
 
 import meshing_functions as mf
-from splib3.topology import Remeshing_functions as rf
+from splib3.topology import remeshing as rf
 
 # def conv_tab_from_ind_tab(ind_tab): # a mettre dans Remeshing_functions.py
 #     conv_tab = []

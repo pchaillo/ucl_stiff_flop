@@ -9,7 +9,7 @@ Created on Fri Oct 21 16:57:00 2022
 # importing csv module
 import numpy as np
 from collections import OrderedDict
-from splib3.topology import Remeshing_functions as rf
+from splib3.topology import remeshing as rf
 
 import Sofa
 from splib3.numerics import Vec3, Quat, sdiv
@@ -316,9 +316,9 @@ def close_cavity_3(ind_top,ind_bottom): # dirty => you may do better my boy
     # triangles_bottom = closeSurface(ind_bottom)
     # triangles = triangles_top + triangles_bottom
 
-    triangles = rf.closeSurface(ind_top)
+    triangles = rf.close_surface(ind_top)
     triangles = rf.invers_normal(triangles)
-    triangles_bottom = rf.closeSurface(ind_bottom)
+    triangles_bottom = rf.close_surface(ind_bottom)
 
     for i in triangles_bottom :
         triangles.append(i)

@@ -42,7 +42,7 @@ import time
 
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 0 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
+act_flag = 1 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
@@ -77,7 +77,7 @@ if dynamic == 1 :
     init_pressure_value = init_pressure_value*dt
 
 ## Robot Parameters ##
-nb_module = 1 # nombre de modules
+nb_module = 2 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
@@ -179,26 +179,40 @@ def MyScene(rootNode, out_flag,step,YM_soft_part,coef_poi,act_flag,data_exp):
 
     stiff = Stiff_Flop(h_module,init_pressure_value,value_type,YM_soft_part,YM_stiff_part,coef_poi,nb_cavity,chamber_model,nb_module,module_model,max_pression,name_cavity,masse_module,nb_poutre,rigid_base,rigid_top,rigid_bool,min_pression,force_field,dynamic,dt,nb_slices,r_disk_chamber,r_cavity)
     
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
-    rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/BeamAdapter/lib')#/libBeamAdapter.so 1.0
+    # rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/SoftRobots/lib/') #libSoftRobots.so 1.0
+    # rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/ModelOrderReduction/lib/') #libSoftRobots.so 1.0
+    # rootNode.addObject('AddPluginRepository', path = '/home/pchaillo/Documents/10-SOFA/sofa/build/master/external_directories/plugins/BeamAdapter/lib')#/libBeamAdapter.so 1.0
 
-    # required plugins:
-    rootNode.addObject('RequiredPlugin', name='SoftRobots.Inverse')
-    rootNode.addObject('RequiredPlugin', name='SoftRobots')
-    rootNode.addObject('RequiredPlugin', name='BeamAdapter')
-    # rootNode.addObject('RequiredPlugin', name='SofaConstraint')
-    # rootNode.addObject('RequiredPlugin', name='SofaDeformable')
-    # rootNode.addObject('RequiredPlugin', name='SofaGeneralAnimationLoop')
-    rootNode.addObject('RequiredPlugin', name='SofaImplicitOdeSolver')
-    # rootNode.addObject('RequiredPlugin', name='SofaLoader')
-    # rootNode.addObject('RequiredPlugin', name='SofaMeshCollision')
-    rootNode.addObject('RequiredPlugin', name='SofaSimpleFem')
-    # rootNode.addObject('RequiredPlugin', name='SofaSparseSolver')
-    rootNode.addObject('RequiredPlugin', name='SofaEngine')
-    # rootNode.addObject('RequiredPlugin', name='SofaGeneralLoader')
-    # rootNode.addObject('RequiredPlugin', name='SofaGeneralEngine')
-    #rootNode.addObject('RequiredPlugin', name='SofaPython')
+    pluginNode  = rootNode.addChild('pluginNode')
+    pluginNode.addObject('RequiredPlugin', name='SoftRobots.Inverse') # Where is SofaValidation ? => Deprecated Error in terminal
+    pluginNode.addObject('RequiredPlugin', name='SoftRobots')
+    pluginNode.addObject('RequiredPlugin', name='BeamAdapter')
+    pluginNode.addObject('RequiredPlugin', name='SOFA.Component.IO.Mesh')
+    pluginNode.addObject('RequiredPlugin', name='SOFA.Component.Engine.Generate')
+    pluginNode.addObject('RequiredPlugin', name='SOFA.Component.Mass')
+    pluginNode.addObject('RequiredPlugin', name='SOFA.Component.LinearSolver.Direct')
+    pluginNode.addObject('RequiredPlugin', name='SOFA.Component.Constraint.Lagrangian.Correction')  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.GL.Component.Rendering3D') 
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Diffusion')
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.AnimationLoop') # Needed to use components [FreeMotionAnimationLoop]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Collision.Geometry') # Needed to use components [SphereCollisionModel]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Constraint.Lagrangian.Correction') # Needed to use components [GenericConstraintCorrection,UncoupledConstraintCorrection]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Constraint.Lagrangian.Solver') # Needed to use components [GenericConstraintSolver]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Engine.Generate') # Needed to use components [ExtrudeQuadsAndGenerateHexas]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Engine.Select') # Needed to use components [BoxROI]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.IO.Mesh') # Needed to use components [MeshOBJLoader]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.LinearSolver.Direct') # Needed to use components [SparseLDLSolver]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.LinearSolver.Iterative') # Needed to use components [CGLinearSolver]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Mass') # Needed to use components [UniformMass]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.ODESolver.Backward') # Needed to use components [EulerImplicitSolver]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Setting') # Needed to use components [BackgroundSetting]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.SolidMechanics.FEM.Elastic') # Needed to use components [HexahedronFEMForceField]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.SolidMechanics.Spring') # Needed to use components [RestShapeSpringsForceField]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.StateContainer') # Needed to use components [MechanicalObject]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Container.Dynamic') # Needed to use components [HexahedronSetTopologyContainer,TriangleSetTopologyContainer]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Topology.Container.Grid') # Needed to use components [RegularGridTopology]  
+    pluginNode.addObject('RequiredPlugin', name='Sofa.Component.Visual') # Needed to use components [VisualStyle]  
+
 
     # rootNode.findData('gravity').value=[0, 0, 9810];
     rootNode.findData('gravity').value=[0, 0, 0];
