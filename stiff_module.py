@@ -40,9 +40,10 @@ from UCL_Controller import *
 #from tutorial import *
 import time
 
+
 ############## PARAM7TRES A FIXER ####################
 ## FLAG ##
-act_flag = 1 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
+act_flag = 0 # set 0 for IP (Inverse Problem resolution with QP) and 1 for direct control
 version = 2 # v1 d=14mm // v2 d=11.5mm // v3 d = 10mm // v4 d = 8mm but with 4 cavities
 record = 0 # 0 => no record // 1 => record
 setup = 0 # 0 => no hardware connected // 1 => UCL JILAEI SETUP // 2 => INRIA DEFROST SETUP
@@ -77,7 +78,7 @@ if dynamic == 1 :
     init_pressure_value = init_pressure_value*dt
 
 ## Robot Parameters ##
-nb_module = 2 # nombre de modules
+nb_module = 1 # nombre de modules
 # module
 masse_module = 0.01 # in kg, equivalent to 10g
 # soft part
