@@ -18,7 +18,7 @@ Created on Fri Oct 21 16:57:00 2022
 import csv
 import numpy as np
 from math import sin,cos, sqrt, acos, radians, dist
-from spicy import copy
+from spicy import *
 
 import meshing_functions as mf
 from splib3.topology import remeshing as rf

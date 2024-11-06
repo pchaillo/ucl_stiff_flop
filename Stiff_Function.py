@@ -16,7 +16,7 @@ from splib3.topology import remeshing as rf
 #from stlib3.physics.mixedmaterial import Rigidify
 from os import getcwd
 from math import sin,cos, sqrt, acos, radians
-from spicy import copy
+from spicy import *
 
 # permet d'initialiser un robot au nb de module voulu :
 # - mettre tous les paramètres dans l'initialisation de la variable
@@ -354,12 +354,9 @@ class Stiff_Flop() :
             Boite_H = module.getObject(name_base + "_H" + str(i+1))
              
             # ## Remeshing part
-            quads = copy(Boite_K.quadInROI.value)
-            points = copy(Boite_K.pointsInROI.value)
-            indices = copy(Boite_K.indices.value)
 
-            [new_points_K, triangles_K,old_ind_eq_tab_K] = em.CylinderMeshFromROI(points=copy(Boite_K.pointsInROI.value),quads=Boite_K.quadInROI.value,indices=Boite_K.indices.value)
-            [new_points_H, triangles_H,old_ind_eq_tab_H] = em.CylinderMeshFromROI(points=copy(Boite_H.pointsInROI.value),quads=Boite_H.quadInROI.value,indices=Boite_H.indices.value)
+            [new_points_K, triangles_K,old_ind_eq_tab_K] = em.CylinderMeshFromROI(points=Boite_K.pointsInROI.value,quads=Boite_K.quadInROI.value,indices=Boite_K.indices.value)
+            [new_points_H, triangles_H,old_ind_eq_tab_H] = em.CylinderMeshFromROI(points=Boite_H.pointsInROI.value,quads=Boite_H.quadInROI.value,indices=Boite_H.indices.value)
 
             nb_tri = len(new_points_K) # - 1 ?
 
